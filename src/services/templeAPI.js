@@ -479,6 +479,53 @@ export const authAPI = {
   }
 };
 
+/**
+ * ============ IMAGES API ============
+ */
+export const imagesAPI = {
+  getAll: async () => {
+    const images = getFromStorage(STORAGE_KEYS.IMAGES, []);
+    return Promise.resolve({ data: images });
+  },
+
+  upload: async (formData) => {
+    const images = getFromStorage(STORAGE_KEYS.IMAGES, []);
+    const file = formData.get('image');
+    const title = formData.get('title') || 'Untitled';
+    const description = formData.get('description') || '';
+    
+    if (file) {
+      const base64 = await new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.readAsDataURL(file);
+      });
+      
+      const newImage = {
+        id: generateId(),
+        title,
+        description,
+        imageUrl: base64,
+        fileName: file.name,
+        createdAt: new Date().toISOString()
+      };
+      
+      images.push(newImage);
+      saveToStorage(STORAGE_KEYS.IMAGES, images);
+      return Promise.resolve({ data: newImage });
+    }
+    
+    return Promise.reject(new Error('No image file provided'));
+  },
+
+  delete: async (id) => {
+    const images = getFromStorage(STORAGE_KEYS.IMAGES, []);
+    const filtered = images.filter(img => img.id !== id);
+    saveToStorage(STORAGE_KEYS.IMAGES, filtered);
+    return Promise.resolve({ data: { message: 'Image deleted successfully' } });
+  }
+};
+
 // Export storage keys for direct access if needed
 export { STORAGE_KEYS };
 
@@ -489,5 +536,6 @@ export default {
   staffAPI,
   timingsAPI,
   donorsAPI,
-  authAPI
+  authAPI,
+  imagesAPI
 };
