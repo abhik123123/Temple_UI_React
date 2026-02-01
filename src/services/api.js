@@ -61,7 +61,18 @@ export const eventsAPI = {
   getAll: () => apiClient.get('/api/events'),
   getById: (id) => apiClient.get(`/api/events/${id}`),
   getUpcoming: () => apiClient.get('/api/events'),
-  create: (data) => apiClient.post('/api/events', data),
+  create: (data) => {
+    // If data is FormData (for file upload), use multipart/form-data
+    if (data instanceof FormData) {
+      return apiClient.post('/api/events', data, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+    }
+    // Otherwise use regular JSON
+    return apiClient.post('/api/events', data);
+  },
   delete: (id) => apiClient.delete(`/api/events/${id}`),
 };
 
@@ -88,11 +99,23 @@ export const contactAPI = {
 
 // Donors API
 export const donorsAPI = {
-  getAll: () => apiClient.get('/api/donors'),
+  getAll: (params) => {
+    // Support query parameters for filtering
+    const queryString = params ? '?' + new URLSearchParams(params).toString() : '';
+    return apiClient.get(`/api/donors${queryString}`);
+  },
   getById: (id) => apiClient.get(`/api/donors/${id}`),
   create: (data) => apiClient.post('/api/donors', data),
   update: (id, data) => apiClient.put(`/api/donors/${id}`, data),
   delete: (id) => apiClient.delete(`/api/donors/${id}`),
+  // Filter by date range
+  getByDateRange: (startDate, endDate) => apiClient.get('/api/donors', {
+    params: { startDate, endDate }
+  }),
+  // Filter by month and year
+  getByMonthYear: (month, year) => apiClient.get('/api/donors', {
+    params: { month, year }
+  }),
 };
 
 // Authentication API

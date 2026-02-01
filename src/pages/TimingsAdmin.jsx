@@ -11,13 +11,8 @@ const translations = {
     cancel: 'Cancel',
     opening: 'Opening Time',
     closing: 'Closing Time',
-    monday: 'Monday',
-    tuesday: 'Tuesday',
-    wednesday: 'Wednesday',
-    thursday: 'Thursday',
-    friday: 'Friday',
-    saturday: 'Saturday',
-    sunday: 'Sunday',
+    addSlot: 'Add Time Slot',
+    removeSlot: 'Remove',
     loading: 'Loading...',
     error: 'Error',
     success: 'Timings saved successfully!',
@@ -33,13 +28,8 @@ const translations = {
     cancel: 'రద్దు',
     opening: 'తెరిచే సమయం',
     closing: 'ఆగిపోయే సమయం',
-    monday: 'సోమవారం',
-    tuesday: 'మంగళవారం',
-    wednesday: 'బుధవారం',
-    thursday: 'గురువారం',
-    friday: 'శుక్రవారం',
-    saturday: 'శనివారం',
-    sunday: 'ఆదివారం',
+    addSlot: 'సమయ స్లాట్ జోడించండి',
+    removeSlot: 'తొలగించు',
     loading: 'లోడ్ చేస్తోంది...',
     error: 'లోపం',
     success: 'సమయాలు విజయవంతంగా సేవ్ చేయబడ్డాయి!',
@@ -55,13 +45,8 @@ const translations = {
     cancel: 'रद्द करें',
     opening: 'खुलने का समय',
     closing: 'बंद होने का समय',
-    monday: 'सोमवार',
-    tuesday: 'मंगलवार',
-    wednesday: 'बुधवार',
-    thursday: 'गुरुवार',
-    friday: 'शुक्रवार',
-    saturday: 'शनिवार',
-    sunday: 'रविवार',
+    addSlot: 'समय स्लॉट जोड़ें',
+    removeSlot: 'हटाएं',
     loading: 'लोड हो रहा है...',
     error: 'त्रुटि',
     success: 'समय सफलतापूर्वक सहेजे गए!',
@@ -72,26 +57,18 @@ const translations = {
   }
 };
 
-// Mock data
-const MOCK_TIMINGS = {
-  monday: { open: '06:00', close: '21:00' },
-  tuesday: { open: '06:00', close: '21:00' },
-  wednesday: { open: '06:00', close: '21:00' },
-  thursday: { open: '06:00', close: '21:00' },
-  friday: { open: '06:00', close: '21:00' },
-  saturday: { open: '06:00', close: '21:00' },
-  sunday: { open: '06:00', close: '21:00' }
-};
+const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
-const DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+// Helper to generate unique IDs
+const generateId = () => Date.now() + Math.random().toString(36).substr(2, 9);
 
 export default function TimingsAdmin() {
   const { language } = useLanguage();
   const { user, isAuthenticated } = useAuth();
   const t = translations[language] || translations.en;
 
-  const [timings, setTimings] = useState(MOCK_TIMINGS);
-  const [originalTimings, setOriginalTimings] = useState(MOCK_TIMINGS);
+  const [timings, setTimings] = useState({});
+  const [originalTimings, setOriginalTimings] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [hasChanges, setHasChanges] = useState(false);
@@ -108,46 +85,107 @@ export default function TimingsAdmin() {
   const fetchTimings = async () => {
     try {
       setLoading(true);
-      const data = await timingsAPI.getAll();
-      if (data) {
-        const timingsData = Array.isArray(data) ? data : data?.data || MOCK_TIMINGS;
-        setTimings(timingsData);
-        setOriginalTimings(timingsData);
-      }
+      const response = await timingsAPI.getAll();
+      const timingsData = response?.data || [];
+      
+      // Convert array format to object format for admin form
+      const timingsObject = {};
+      timingsData.forEach(dayTiming => {
+        timingsObject[dayTiming.day] = {
+          slots: dayTiming.slots || [],
+          notes: dayTiming.notes || ''
+        };
+      });
+      
+      setTimings(timingsObject);
+      setOriginalTimings(JSON.parse(JSON.stringify(timingsObject)));
       setError(null);
     } catch (err) {
-      console.warn('Backend not available, using mock data:', err.message);
-      setTimings(MOCK_TIMINGS);
-      setOriginalTimings(MOCK_TIMINGS);
+      console.warn('Error loading timings:', err.message);
       setError(null);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleTimeChange = (day, field, value) => {
-    setTimings(prev => ({
-      ...prev,
-      [day]: {
-        ...prev[day],
-        [field]: value
+  const handleTimeChange = (day, slotId, field, value) => {
+    setTimings(prev => {
+      const dayData = prev[day] || { slots: [], notes: '' };
+      const daySlots = [...dayData.slots];
+      const slotIndex = daySlots.findIndex(s => s.id === slotId);
+      if (slotIndex !== -1) {
+        daySlots[slotIndex] = { ...daySlots[slotIndex], [field]: value };
       }
-    }));
-    setHasChanges(JSON.stringify(timings) !== JSON.stringify(originalTimings));
+      return { 
+        ...prev, 
+        [day]: { ...dayData, slots: daySlots }
+      };
+    });
+    setHasChanges(true);
+  };
+
+  const handleNotesChange = (day, value) => {
+    setTimings(prev => {
+      const dayData = prev[day] || { slots: [], notes: '' };
+      return {
+        ...prev,
+        [day]: { ...dayData, notes: value }
+      };
+    });
+    setHasChanges(true);
+  };
+
+  const addTimeSlot = (day) => {
+    setTimings(prev => {
+      const dayData = prev[day] || { slots: [], notes: '' };
+      return {
+        ...prev,
+        [day]: {
+          ...dayData,
+          slots: [
+            ...dayData.slots,
+            { id: generateId(), openTime: '09:00', closeTime: '17:00' }
+          ]
+        }
+      };
+    });
+    setHasChanges(true);
+  };
+
+  const removeTimeSlot = (day, slotId) => {
+    setTimings(prev => {
+      const dayData = prev[day] || { slots: [], notes: '' };
+      return {
+        ...prev,
+        [day]: {
+          ...dayData,
+          slots: dayData.slots.filter(slot => slot.id !== slotId)
+        }
+      };
+    });
+    setHasChanges(true);
   };
 
   const handleSave = async () => {
     try {
       setSaving(true);
-      for (const [day, timing] of Object.entries(timings)) {
-        // Ensure time values have seconds component (HH:mm:ss format)
-        const formattedTiming = {
-          open: timing.open ? (timing.open.split(':').length === 2 ? timing.open + ':00' : timing.open) : null,
-          close: timing.close ? (timing.close.split(':').length === 2 ? timing.close + ':00' : timing.close) : null
-        };
-        await timingsAPI.update(day, formattedTiming);
+      
+      // Convert to array format for storage
+      for (const day of DAYS) {
+        const dayData = timings[day] || { slots: [], notes: '' };
+        const slots = dayData.slots.map(slot => ({
+          id: slot.id,
+          openTime: slot.openTime ? (slot.openTime.split(':').length === 2 ? slot.openTime + ':00' : slot.openTime) : '09:00:00',
+          closeTime: slot.closeTime ? (slot.closeTime.split(':').length === 2 ? slot.closeTime + ':00' : slot.closeTime) : '17:00:00'
+        }));
+        
+        await timingsAPI.update(day, { 
+          slots,
+          notes: dayData.notes || ''
+        });
       }
-      setOriginalTimings(timings);
+      
+      setOriginalTimings(JSON.parse(JSON.stringify(timings)));
       setHasChanges(false);
       alert(t.success);
     } catch (err) {
@@ -159,7 +197,7 @@ export default function TimingsAdmin() {
   };
 
   const handleCancel = () => {
-    setTimings(originalTimings);
+    setTimings(JSON.parse(JSON.stringify(originalTimings)));
     setHasChanges(false);
   };
 
@@ -212,7 +250,7 @@ export default function TimingsAdmin() {
 
   return (
     <div style={{ padding: '40px 20px', minHeight: '70vh', backgroundColor: '#f9f9f9' }}>
-      <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
+      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
         {/* Header */}
         <div style={{ marginBottom: '30px' }}>
           <h1 style={{ fontSize: '2rem', color: '#0B1C3F', margin: '0 0 10px 0' }}>
@@ -249,32 +287,49 @@ export default function TimingsAdmin() {
             {t.weeklySchedule}
           </h2>
 
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-            gap: '25px',
-            marginBottom: '30px'
-          }}>
-            {DAYS.map(day => (
+          {DAYS.map(day => {
+            const dayData = timings[day] || { slots: [], notes: '' };
+            return (
               <div
                 key={day}
                 style={{
+                  marginBottom: '30px',
                   padding: '20px',
                   backgroundColor: '#f5f5f5',
                   borderRadius: '8px',
                   borderLeft: '4px solid #E6B325'
                 }}
               >
-                <h4 style={{
-                  color: '#0B1C3F',
-                  margin: '0 0 15px 0',
-                  textTransform: 'capitalize',
-                  fontSize: '16px',
-                  fontWeight: '600'
-                }}>
-                  {t[day]}
-                </h4>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+                  <h4 style={{
+                    color: '#0B1C3F',
+                    margin: 0,
+                    fontSize: '18px',
+                    fontWeight: '600'
+                  }}>
+                    {day}
+                  </h4>
+                  <button
+                    onClick={() => addTimeSlot(day)}
+                    style={{
+                      padding: '8px 16px',
+                      backgroundColor: '#4CAF50',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      transition: 'all 0.3s ease'
+                    }}
+                    onMouseEnter={e => e.target.style.opacity = '0.9'}
+                    onMouseLeave={e => e.target.style.opacity = '1'}
+                  >
+                    ➕ {t.addSlot || 'Add Time Slot'}
+                  </button>
+                </div>
 
+                {/* Notes Field */}
                 <div style={{ marginBottom: '15px' }}>
                   <label style={{
                     display: 'block',
@@ -283,65 +338,119 @@ export default function TimingsAdmin() {
                     fontWeight: '500',
                     color: '#333'
                   }}>
-                    {t.opening}
+                    📝 Notes (will be displayed on user page)
                   </label>
                   <input
-                    type="time"
-                    value={timings[day]?.open || '06:00'}
-                    onChange={(e) => handleTimeChange(day, 'open', e.target.value)}
+                    type="text"
+                    value={dayData.notes}
+                    onChange={(e) => handleNotesChange(day, e.target.value)}
+                    placeholder="e.g., Multiple Sessions, Regular Schedule, Extended Hours"
                     style={{
                       width: '100%',
                       padding: '10px',
                       border: '1px solid #ddd',
                       borderRadius: '4px',
                       fontSize: '14px',
-                      boxSizing: 'border-box'
+                      boxSizing: 'border-box',
+                      backgroundColor: 'white'
                     }}
                   />
                 </div>
 
-                <div style={{ marginBottom: '10px' }}>
-                  <label style={{
-                    display: 'block',
-                    marginBottom: '8px',
-                    fontSize: '13px',
-                    fontWeight: '500',
-                    color: '#333'
-                  }}>
-                    {t.closing}
-                  </label>
-                  <input
-                    type="time"
-                    value={timings[day]?.close || '21:00'}
-                    onChange={(e) => handleTimeChange(day, 'close', e.target.value)}
+                {dayData.slots.map((slot, index) => (
+                  <div
+                    key={slot.id}
                     style={{
-                      width: '100%',
-                      padding: '10px',
-                      border: '1px solid #ddd',
-                      borderRadius: '4px',
-                      fontSize: '14px',
-                      boxSizing: 'border-box'
+                      display: 'grid',
+                      gridTemplateColumns: '1fr 1fr auto',
+                      gap: '15px',
+                      marginBottom: '15px',
+                      padding: '15px',
+                      backgroundColor: 'white',
+                      borderRadius: '6px',
+                      alignItems: 'end'
                     }}
-                  />
-                </div>
+                  >
+                    <div>
+                      <label style={{
+                        display: 'block',
+                        marginBottom: '8px',
+                        fontSize: '13px',
+                        fontWeight: '500',
+                        color: '#333'
+                      }}>
+                        {t.opening || 'Opening Time'}
+                      </label>
+                      <input
+                        type="time"
+                        value={slot.openTime?.substring(0, 5) || '09:00'}
+                        onChange={(e) => handleTimeChange(day, slot.id, 'openTime', e.target.value)}
+                        style={{
+                          width: '100%',
+                          padding: '10px',
+                          border: '1px solid #ddd',
+                          borderRadius: '4px',
+                          fontSize: '14px',
+                          boxSizing: 'border-box'
+                        }}
+                      />
+                    </div>
 
-                <p style={{
-                  color: '#666',
-                  fontSize: '12px',
-                  margin: '10px 0 0 0',
-                  padding: '10px',
-                  backgroundColor: 'white',
-                  borderRadius: '4px',
-                  textAlign: 'center'
-                }}>
-                  {timings[day]?.open && timings[day]?.close ? 
-                    `${formatTime(timings[day].open)} - ${formatTime(timings[day].close)}` 
-                    : 'No timing set'
-                  }
-                </p>
+                    <div>
+                      <label style={{
+                        display: 'block',
+                        marginBottom: '8px',
+                        fontSize: '13px',
+                        fontWeight: '500',
+                        color: '#333'
+                      }}>
+                        {t.closing || 'Closing Time'}
+                      </label>
+                      <input
+                        type="time"
+                        value={slot.closeTime?.substring(0, 5) || '17:00'}
+                        onChange={(e) => handleTimeChange(day, slot.id, 'closeTime', e.target.value)}
+                        style={{
+                          width: '100%',
+                          padding: '10px',
+                          border: '1px solid #ddd',
+                          borderRadius: '4px',
+                          fontSize: '14px',
+                          boxSizing: 'border-box'
+                        }}
+                      />
+                    </div>
+
+                    <button
+                      onClick={() => removeTimeSlot(day, slot.id)}
+                      disabled={dayData.slots.length === 1}
+                      style={{
+                        padding: '10px 16px',
+                        backgroundColor: dayData.slots.length === 1 ? '#ccc' : '#dc3545',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: dayData.slots.length === 1 ? 'not-allowed' : 'pointer',
+                        fontSize: '14px',
+                        fontWeight: '500',
+                        transition: 'all 0.3s ease'
+                      }}
+                      onMouseEnter={e => dayData.slots.length > 1 && (e.target.style.opacity = '0.9')}
+                      onMouseLeave={e => dayData.slots.length > 1 && (e.target.style.opacity = '1')}
+                    >
+                      🗑️
+                    </button>
+                  </div>
+                ))}
+
+                {dayData.slots.length === 0 && (
+                  <p style={{ color: '#999', textAlign: 'center', margin: '20px 0' }}>
+                    No time slots. Click "Add Time Slot" to add one.
+                  </p>
+                )}
               </div>
-            ))}
-          </div>
+            );
+          })}
 
           {/* Action Buttons */}
           <div style={{
@@ -349,7 +458,8 @@ export default function TimingsAdmin() {
             gap: '15px',
             justifyContent: 'flex-end',
             borderTop: '1px solid #eee',
-            paddingTop: '20px'
+            paddingTop: '20px',
+            marginTop: '30px'
           }}>
             {hasChanges && (
               <button
@@ -403,7 +513,7 @@ export default function TimingsAdmin() {
           color: '#1565c0'
         }}>
           <p style={{ margin: 0, fontSize: '14px', lineHeight: '1.6' }}>
-            💡 <strong>Tip:</strong> Set the opening and closing times for each day of the week. These timings will be displayed to visitors on the temple website.
+            💡 <strong>Tip:</strong> You can add multiple time slots for each day (e.g., morning and evening shifts). Click "Add Time Slot" to create additional slots for any day.
           </p>
         </div>
       </div>

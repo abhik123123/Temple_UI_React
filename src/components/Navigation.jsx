@@ -24,6 +24,9 @@ export default function Navigation() {
           <li><Link to={isAdminPage ? "/home/admin" : "/home"}>{t('nav_home')}</Link></li>
           <li><Link to={isAdminPage ? "/events/admin" : "/events"}>{t('nav_events')}</Link></li>
           <li><Link to={isAdminPage ? "/services/admin" : "/services"}>{t('nav_services')}</Link></li>
+          {/* Temporarily hidden features */}
+          {/* <li><Link to={isAdminPage ? "/pooja-books/admin" : "/pooja-books"}>📚 Pooja Books</Link></li> */}
+          {/* <li><Link to={isAdminPage ? "/bajanas/admin" : "/bajanas"}>🎵 Bajanas</Link></li> */}
           <li><Link to={isAdminPage ? "/staff/admin" : "/staff"}>🧑‍💼 Staff</Link></li>
           <li><Link to={isAdminPage ? "/timings/admin" : "/timings"}>{t('nav_timings')}</Link></li>
           <li><Link to={isAdminPage ? "/board-members/admin" : "/board-members"}>👥 Board</Link></li>

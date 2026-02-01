@@ -41,6 +41,24 @@ export default function UserHome() {
     awards: 'Over the decades, our temple has received numerous accolades for its contributions to society and spiritual guidance.'
   };
 
+  // Service navigation handler
+  const handleServiceClick = (serviceTitle) => {
+    switch(serviceTitle) {
+      case 'Daily Prayers':
+        navigate('/daily-prayers');
+        break;
+      case 'Festivals':
+        navigate('/events');
+        break;
+      case 'Ceremonies':
+        navigate('/services');
+        break;
+      default:
+        // Other services don't have dedicated pages yet
+        break;
+    }
+  };
+
   return (
     <div className="page">
       {/* HERO SECTION */}
@@ -226,13 +244,14 @@ export default function UserHome() {
           {[
             { icon: '🕉️', title: 'Daily Prayers', desc: 'Morning and evening spiritual guidance' },
             { icon: '🎉', title: 'Festivals', desc: 'Celebrate sacred occasions together' },
-            { icon: '📚', title: 'Spiritual Classes', desc: 'Learn vedic knowledge and traditions' },
+            { icon: '📚', title: 'Pooja Books', desc: 'Learn vedic knowledge and traditions' },
             { icon: '💒', title: 'Ceremonies', desc: 'Weddings, birth rituals, and blessings' },
             { icon: '🙏', title: 'Consultations', desc: 'Spiritual guidance from priests' },
             { icon: '💝', title: 'Community Service', desc: 'Feeding and helping the needy' }
           ].map((service, index) => (
             <div
               key={index}
+              onClick={() => handleServiceClick(service.title)}
               style={{
                 padding: '2rem',
                 backgroundColor: 'white',

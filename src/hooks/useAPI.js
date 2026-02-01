@@ -1,32 +1,54 @@
 import { useState, useEffect } from 'react';
 import { templeTimingsAPI, eventsAPI } from '../services/api';
+import config from '../config/environment';
 
-// Helper function to get the API base URL
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080/api';
+// Helper function to get the backend base URL (not the API endpoint URL)
+const BACKEND_URL = config.backendUrl || 'http://localhost:8080';
 
 // Helper function to construct full image URL
 const getImageUrl = (imageData) => {
-  if (!imageData) return null;
+  if (!imageData) {
+    console.log('[useAPI] No image data provided');
+    return null;
+  }
   
-  // If it's already a full URL (http:// or https://)
-  if (typeof imageData === 'string' && (imageData.startsWith('http://') || imageData.startsWith('https://'))) {
+  console.log('[useAPI] Processing image data:', imageData);
+  
+  // If it's already a data URL (base64)
+  if (typeof imageData === 'string' && imageData.startsWith('data:')) {
+    console.log('[useAPI] Image is base64 data URL');
     return imageData;
   }
   
-  // If it's a relative path, construct full URL
+  // If it's already a full URL (http:// or https://)
+  if (typeof imageData === 'string' && (imageData.startsWith('http://') || imageData.startsWith('https://'))) {
+    console.log('[useAPI] Image is already a full URL:', imageData);
+    return imageData;
+  }
+  
+  // If it's a relative path, construct full URL using BACKEND URL (not API URL)
   if (typeof imageData === 'string') {
     // Remove leading slash if present to avoid double slashes
     const cleanPath = imageData.startsWith('/') ? imageData.substring(1) : imageData;
-    return `${API_BASE_URL}/${cleanPath}`;
+    
+    // If the path doesn't include 'uploads', add it
+    const imagePath = cleanPath.includes('uploads/') ? cleanPath : `uploads/${cleanPath}`;
+    
+    const fullUrl = `${BACKEND_URL}/${imagePath}`;
+    console.log('[useAPI] Constructed image URL from relative path:', imageData, '->', fullUrl);
+    return fullUrl;
   }
   
   // If backend returns an object with photoUrl or similar
-  if (typeof imageData === 'object') {
+  if (typeof imageData === 'object' && imageData !== null) {
     if (imageData.photoUrl) return getImageUrl(imageData.photoUrl);
     if (imageData.imageUrl) return getImageUrl(imageData.imageUrl);
     if (imageData.url) return getImageUrl(imageData.url);
+    if (imageData.fileName) return getImageUrl(imageData.fileName);
+    if (imageData.path) return getImageUrl(imageData.path);
   }
   
+  console.log('[useAPI] Could not process image data:', imageData);
   return null;
 };
 

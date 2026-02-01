@@ -1,131 +1,128 @@
-import { useState } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useLanguage } from '../context/LanguageContext';
-import { useAuth } from '../context/AuthContext';
-import { useUpcomingEvents } from '../hooks/useAPI';
-import { eventsAPI } from '../services/api';
+import { eventsAPI } from '../services/templeAPI';
 import EventRegistrationModal from '../components/EventRegistrationModal';
-
-// Helper function to get the API base URL
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080/api';
-
-// Helper function to construct full image URL
-const getImageUrl = (imageData) => {
-  if (!imageData) return null;
-  
-  // If it's already a full URL (http:// or https://)
-  if (typeof imageData === 'string' && (imageData.startsWith('http://') || imageData.startsWith('https://'))) {
-    return imageData;
-  }
-  
-  // If it's a relative path, construct full URL
-  if (typeof imageData === 'string') {
-    // Remove leading slash if present to avoid double slashes
-    const cleanPath = imageData.startsWith('/') ? imageData.substring(1) : imageData;
-    return `${API_BASE_URL}/${cleanPath}`;
-  }
-  
-  // If backend returns an object with photoUrl or similar
-  if (typeof imageData === 'object') {
-    if (imageData.photoUrl) return getImageUrl(imageData.photoUrl);
-    if (imageData.imageUrl) return getImageUrl(imageData.imageUrl);
-    if (imageData.url) return getImageUrl(imageData.url);
-  }
-  
-  return null;
-};
 
 export default function Events() {
   const { t } = useLanguage();
-  const { isAuthenticated } = useAuth();
-  const { events: backendEvents, loading, error, refetch } = useUpcomingEvents();
-  const [showAddForm, setShowAddForm] = useState(false);
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [selectedEventForRegistration, setSelectedEventForRegistration] = useState(null);
   const [registeredEvents, setRegisteredEvents] = useState(new Set());
-  const [formData, setFormData] = useState({
-    eventName: '',
-    description: '',
-    eventDate: '',
-    startTime: '',
-    endTime: '',
-    location: '',
-    category: 'Festival'
-  });
-  const [submitLoading, setSubmitLoading] = useState(false);
-  const [submitError, setSubmitError] = useState(null);
+  const [filterCategory, setFilterCategory] = useState('');
+  const [filterMonth, setFilterMonth] = useState('');
+  const [filterYear, setFilterYear] = useState('');
+  const [imageErrors, setImageErrors] = useState(new Set());
 
-  // No fallback mock data - only show backend data
-  const displayEvents = backendEvents && backendEvents.length > 0 ? backendEvents : [];
+  // Fetch events from localStorage
+  useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        setLoading(true);
+        const response = await eventsAPI.getAll();
+        const eventsArray = Array.isArray(response.data) ? response.data : [];
+        console.log('[Events] Loaded events:', eventsArray);
+        setEvents(eventsArray);
+        setError(null);
+      } catch (err) {
+        console.error('[Events] Error loading events:', err);
+        setError('Failed to load events');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchEvents();
+  }, []);
+
+  // Filter events based on selected filters
+  const filteredEvents = useMemo(() => {
+    return events.filter(event => {
+      const eventDate = new Date(event.eventDate || event.date);
+      
+      // Filter by category
+      if (filterCategory && event.category !== filterCategory) {
+        return false;
+      }
+      
+      // Filter by month
+      if (filterMonth) {
+        if (eventDate.getMonth() + 1 !== parseInt(filterMonth)) {
+          return false;
+        }
+      }
+      
+      // Filter by year
+      if (filterYear) {
+        if (eventDate.getFullYear() !== parseInt(filterYear)) {
+          return false;
+        }
+      }
+      
+      return true;
+    });
+  }, [events, filterCategory, filterMonth, filterYear]);
+
+  // Get unique years and categories for filters
+  const availableYears = useMemo(() => {
+    const years = events.map(event => {
+      const date = new Date(event.eventDate || event.date);
+      return date.getFullYear();
+    });
+    return [...new Set(years)].sort((a, b) => b - a);
+  }, [events]);
+
+  const availableCategories = useMemo(() => {
+    const categories = events.map(event => event.category).filter(Boolean);
+    return [...new Set(categories)];
+  }, [events]);
 
   const formatDate = (dateString) => {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-  };
-
-  const formatTime = (timeString) => {
-    if (!timeString) return '';
-    const parts = timeString.split(':');
-    const hours = parseInt(parts[0]);
-    const minutes = parts[1] || '00';
-    const ampm = hours >= 12 ? 'PM' : 'AM';
-    const displayHour = hours % 12 || 12;
-    return `${displayHour}:${minutes} ${ampm}`;
-  };
-
-  const handleAddEvent = async (e) => {
-    e.preventDefault();
-    setSubmitLoading(true);
-    setSubmitError(null);
-
+    if (!dateString) return 'Date TBD';
     try {
-      await eventsAPI.create(formData);
-      setFormData({
-        eventName: '',
-        description: '',
-        eventDate: '',
-        startTime: '',
-        endTime: '',
-        location: '',
-        category: 'Festival'
-      });
-      setShowAddForm(false);
-      refetch();
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return 'Invalid Date';
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     } catch (err) {
-      setSubmitError(err.response?.data?.message || 'Failed to add event');
-    } finally {
-      setSubmitLoading(false);
+      console.error('[Events] Error formatting date:', err);
+      return 'Date TBD';
     }
   };
 
-  const handleDeleteEvent = async (eventId) => {
-    if (!window.confirm('Are you sure you want to delete this event?')) return;
-
+  const formatTime = (timeString) => {
+    if (!timeString) return 'Time TBD';
     try {
-      await eventsAPI.delete(eventId);
-      refetch();
+      const parts = timeString.split(':');
+      const hours = parseInt(parts[0]);
+      const minutes = parts[1] || '00';
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      const displayHour = hours % 12 || 12;
+      return `${displayHour}:${minutes} ${ampm}`;
     } catch (err) {
-      alert('Failed to delete event: ' + (err.response?.data?.message || err.message));
+      console.error('[Events] Error formatting time:', err);
+      return 'Time TBD';
     }
   };
 
   const handleRegisterClick = (event) => {
-    console.log('Register button clicked for:', event.eventName);
-    console.log('Setting selectedEventForRegistration to:', event);
     setSelectedEventForRegistration(event);
-    console.log('State should be set now');
   };
 
   const handleRegistrationSuccess = (response) => {
-    console.log('Registration successful:', response);
-    setRegisteredEvents(prev => new Set([...prev, selectedEvent.id]));
+    console.log('[Events] Registration successful:', response);
+    setRegisteredEvents(prev => new Set([...prev, selectedEventForRegistration.id]));
+    setSelectedEventForRegistration(null);
   };
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+  const handleImageError = (eventId) => {
+    setImageErrors(prev => new Set([...prev, eventId]));
+  };
+
+  const clearFilters = () => {
+    setFilterCategory('');
+    setFilterMonth('');
+    setFilterYear('');
   };
 
   return (
@@ -146,232 +143,308 @@ export default function Events() {
           background: 'rgba(0, 0, 0, 0.5)'
         }}></div>
         <div style={{ position: 'relative', zIndex: 1, textAlign: 'center' }}>
-          <h1 style={{ color: 'white' }}>📅 {t('events_title')}</h1>
-          <p style={{ color: '#f0f0f0' }}>{t('events_upcoming')}</p>
+          <h1 style={{ color: 'white' }}>📅 {t('events_title') || 'Temple Events'}</h1>
+          <p style={{ color: '#f0f0f0' }}>{t('events_subtitle') || 'Join us in celebrating our spiritual journey'}</p>
         </div>
       </div>
 
       <div className="container">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-          <h2 style={{ textAlign: 'center', flex: 1, color: '#8b4513' }}>{t('events_upcoming')}</h2>
-          {isAuthenticated && (
-            <button 
-              className="btn" 
-              onClick={() => setShowAddForm(!showAddForm)}
-              style={{ marginLeft: 'auto' }}
+        <h2 style={{ color: '#8b4513', marginBottom: '1.5rem', textAlign: 'center' }}>
+          🌟 Upcoming Events
+        </h2>
+
+        {/* Filters Section */}
+        <div style={{
+          background: '#f9f9f9',
+          padding: '1.5rem',
+          borderRadius: '8px',
+          marginBottom: '2rem',
+          border: '1px solid #ddd'
+        }}>
+          <h3 style={{ color: '#8b4513', marginBottom: '1rem', fontSize: '1.1rem' }}>
+            🔍 Filter Events
+          </h3>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+            gap: '1rem',
+            marginBottom: '1rem'
+          }}>
+            {/* Category Filter */}
+            <div>
+              <label style={{ display: 'block', marginBottom: '0.5rem', color: '#555', fontSize: '0.9rem' }}>
+                🏷️ Category
+              </label>
+              <select
+                value={filterCategory}
+                onChange={(e) => setFilterCategory(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '0.5rem',
+                  border: '1px solid #ddd',
+                  borderRadius: '4px',
+                  fontSize: '0.9rem'
+                }}
+              >
+                <option value="">All Categories</option>
+                {availableCategories.map(cat => (
+                  <option key={cat} value={cat}>{cat}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Month Filter */}
+            <div>
+              <label style={{ display: 'block', marginBottom: '0.5rem', color: '#555', fontSize: '0.9rem' }}>
+                📆 Month
+              </label>
+              <select
+                value={filterMonth}
+                onChange={(e) => setFilterMonth(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '0.5rem',
+                  border: '1px solid #ddd',
+                  borderRadius: '4px',
+                  fontSize: '0.9rem'
+                }}
+              >
+                <option value="">All Months</option>
+                <option value="1">January</option>
+                <option value="2">February</option>
+                <option value="3">March</option>
+                <option value="4">April</option>
+                <option value="5">May</option>
+                <option value="6">June</option>
+                <option value="7">July</option>
+                <option value="8">August</option>
+                <option value="9">September</option>
+                <option value="10">October</option>
+                <option value="11">November</option>
+                <option value="12">December</option>
+              </select>
+            </div>
+
+            {/* Year Filter */}
+            <div>
+              <label style={{ display: 'block', marginBottom: '0.5rem', color: '#555', fontSize: '0.9rem' }}>
+                📅 Year
+              </label>
+              <select
+                value={filterYear}
+                onChange={(e) => setFilterYear(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '0.5rem',
+                  border: '1px solid #ddd',
+                  borderRadius: '4px',
+                  fontSize: '0.9rem'
+                }}
+              >
+                <option value="">All Years</option>
+                {availableYears.map(year => (
+                  <option key={year} value={year}>{year}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Clear Filters Button */}
+          {(filterCategory || filterMonth || filterYear) && (
+            <button
+              onClick={clearFilters}
+              style={{
+                padding: '0.5rem 1rem',
+                background: '#f44336',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontSize: '0.9rem'
+              }}
             >
-              {showAddForm ? '❌ Cancel' : '➕ Add Event'}
+              ✖ Clear Filters
             </button>
           )}
+
+          {/* Results count */}
+          <div style={{ marginTop: '1rem', color: '#666', fontSize: '0.9rem' }}>
+            Showing {filteredEvents.length} of {events.length} events
+          </div>
         </div>
 
-        {showAddForm && isAuthenticated && (
-          <div style={{
-            background: '#f9f9f9',
-            padding: '2rem',
-            borderRadius: '8px',
-            marginBottom: '2rem',
-            border: '1px solid #ddd'
-          }}>
-            <h3 style={{ color: '#8b4513', marginBottom: '1.5rem' }}>Add New Event</h3>
-            {submitError && (
-              <div style={{ background: '#ffe5e5', padding: '1rem', borderRadius: '4px', color: '#d32f2f', marginBottom: '1rem' }}>
-                ⚠️ {submitError}
-              </div>
-            )}
-            <form onSubmit={handleAddEvent}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
-                <input
-                  type="text"
-                  name="eventName"
-                  placeholder="Event Name"
-                  value={formData.eventName}
-                  onChange={handleInputChange}
-                  required
-                  style={{ padding: '0.75rem', borderRadius: '4px', border: '1px solid #ddd' }}
-                />
-                <input
-                  type="date"
-                  name="eventDate"
-                  value={formData.eventDate}
-                  onChange={handleInputChange}
-                  required
-                  style={{ padding: '0.75rem', borderRadius: '4px', border: '1px solid #ddd' }}
-                />
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
-                <input
-                  type="time"
-                  name="startTime"
-                  value={formData.startTime}
-                  onChange={handleInputChange}
-                  required
-                  style={{ padding: '0.75rem', borderRadius: '4px', border: '1px solid #ddd' }}
-                />
-                <input
-                  type="time"
-                  name="endTime"
-                  value={formData.endTime}
-                  onChange={handleInputChange}
-                  required
-                  style={{ padding: '0.75rem', borderRadius: '4px', border: '1px solid #ddd' }}
-                />
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
-                <input
-                  type="text"
-                  name="location"
-                  placeholder="Location"
-                  value={formData.location}
-                  onChange={handleInputChange}
-                  required
-                  style={{ padding: '0.75rem', borderRadius: '4px', border: '1px solid #ddd' }}
-                />
-                <select
-                  name="category"
-                  value={formData.category}
-                  onChange={handleInputChange}
-                  style={{ padding: '0.75rem', borderRadius: '4px', border: '1px solid #ddd' }}
-                >
-                  <option value="Festival">Festival</option>
-                  <option value="Prayer">Prayer</option>
-                  <option value="Ceremony">Ceremony</option>
-                  <option value="Class">Class</option>
-                  <option value="Other">Other</option>
-                </select>
-              </div>
-              <textarea
-                name="description"
-                placeholder="Event Description"
-                value={formData.description}
-                onChange={handleInputChange}
-                required
-                rows="4"
-                style={{ 
-                  width: '100%', 
-                  padding: '0.75rem', 
-                  borderRadius: '4px', 
-                  border: '1px solid #ddd',
-                  marginBottom: '1rem',
-                  fontFamily: 'inherit'
-                }}
-              />
-              <button 
-                type="submit" 
-                className="btn"
-                disabled={submitLoading}
-                style={{ opacity: submitLoading ? 0.6 : 1, cursor: submitLoading ? 'not-allowed' : 'pointer' }}
-              >
-                {submitLoading ? 'Adding...' : 'Add Event'}
-              </button>
-            </form>
-          </div>
-        )}
-
         {loading && (
-          <div style={{ textAlign: 'center', padding: '2rem', color: '#666' }}>
+          <div style={{ textAlign: 'center', padding: '3rem', color: '#666' }}>
             Loading events...
           </div>
         )}
 
         {error && (
-          <div style={{ background: '#ffe5e5', padding: '1rem', borderRadius: '4px', color: '#d32f2f', marginBottom: '2rem' }}>
+          <div style={{ 
+            background: '#ffe5e5', 
+            padding: '1rem', 
+            borderRadius: '4px', 
+            color: '#d32f2f', 
+            marginBottom: '2rem' 
+          }}>
             ⚠️ {error}
           </div>
         )}
 
-        <div className="cards-grid">
-          {displayEvents.map(event => (
-            <div key={event.id} className="card">
-              {/* Event Image */}
-              {event.imageUrl && (
-                <div style={{ 
-                  width: '100%', 
-                  height: '200px', 
-                  overflow: 'hidden',
-                  backgroundColor: '#f5e6d3'
-                }}>
-                  <img 
-                    src={event.imageUrl} 
-                    alt={event.eventName}
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'cover'
-                    }}
-                    onError={(e) => {
-                      // Hide image if it fails to load and show icon instead
-                      e.target.style.display = 'none';
-                    }}
-                  />
-                </div>
-              )}
-              
-              {/* Show icon only if no image */}
-              {!event.imageUrl && (
-                <div className="card-image" style={{ fontSize: '2.5rem', padding: '1rem', textAlign: 'center', background: '#f5e6d3' }}>
-                  {event.icon || '📅'}
-                </div>
-              )}
-              
-              <div className="card-content">
-                <h3>{event.eventName}</h3>
-                <p><strong>📅 Date:</strong> {formatDate(event.eventDate)}</p>
-                <p><strong>⏰ Time:</strong> {formatTime(event.startTime)} - {formatTime(event.endTime)}</p>
-                {event.location && <p><strong>📍 Location:</strong> {event.location}</p>}
-                {event.category && <p><strong>Category:</strong> {event.category}</p>}
-                <p style={{ margin: '1rem 0', color: '#555' }}>{event.description}</p>
-                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <span style={{ 
-                    display: 'inline-block', 
-                    padding: '0.25rem 0.75rem', 
-                    background: event.status === 'Upcoming' ? '#4caf50' : '#ff9800',
-                    color: 'white',
-                    borderRadius: '12px',
-                    fontSize: '0.85rem'
+        {!loading && !error && (
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+            gap: '2rem'
+          }}>
+            {filteredEvents.map(event => (
+              <div key={event.id} style={{
+                backgroundColor: 'white',
+                borderRadius: '8px',
+                overflow: 'hidden',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+                cursor: 'pointer'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-5px)';
+                e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.15)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+              }}>
+                {/* Event Image */}
+                {event.imageUrl && !imageErrors.has(event.id) ? (
+                  <div style={{ 
+                    width: '100%', 
+                    height: '200px', 
+                    overflow: 'hidden',
+                    backgroundColor: '#f5e6d3'
                   }}>
-                    {event.status || 'Upcoming'}
-                  </span>
-                  {isAuthenticated && (
-                    <button 
-                      onClick={() => handleDeleteEvent(event.id)}
+                    <img 
+                      src={event.imageUrl} 
+                      alt={event.eventName || event.title || 'Event'}
                       style={{
-                        background: '#d32f2f',
-                        color: 'white',
-                        border: 'none',
-                        padding: '0.5rem 1rem',
-                        borderRadius: '4px',
-                        cursor: 'pointer',
-                        fontSize: '0.85rem'
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover'
                       }}
-                    >
-                      🗑️ Delete
-                    </button>
-                  )}
-                </div>
-                <button 
-                  onClick={() => {
-                    console.log('Register button onClick triggered');
-                    handleRegisterClick(event);
-                  }}
-                  className="btn" 
-                  style={{ 
-                    marginTop: '1rem', 
-                    width: '100%',
-                    background: registeredEvents.has(event.id) ? '#b0bec5' : undefined
-                  }}
-                  disabled={registeredEvents.has(event.id)}
-                >
-                  {registeredEvents.has(event.id) ? '✅ Registered' : 'Register'}
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
+                      onError={(e) => {
+                        console.error('[Events] Image failed to load for event:', event.eventName || event.title);
+                        handleImageError(event.id);
+                      }}
+                    />
+                  </div>
+                ) : (
+                  <div style={{ 
+                    width: '100%', 
+                    height: '200px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '3rem',
+                    backgroundColor: '#f5e6d3',
+                    color: '#8b4513'
+                  }}>
+                    📅
+                  </div>
+                )}
+                
+                <div style={{ padding: '1.5rem' }}>
+                  <div style={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'start',
+                    marginBottom: '1rem'
+                  }}>
+                    <h3 style={{ 
+                      margin: 0, 
+                      color: '#8b4513',
+                      fontSize: '1.3rem',
+                      flex: 1
+                    }}>
+                      {event.eventName || event.title || 'Untitled Event'}
+                    </h3>
+                    {event.category && (
+                      <span style={{ 
+                        display: 'inline-block', 
+                        padding: '0.25rem 0.75rem', 
+                        background: '#e8f5e9',
+                        color: '#2e7d32',
+                        borderRadius: '12px',
+                        fontSize: '0.75rem',
+                        fontWeight: '500',
+                        marginLeft: '0.5rem'
+                      }}>
+                        {event.category}
+                      </span>
+                    )}
+                  </div>
 
-        {displayEvents.length === 0 && !loading && (
-          <div style={{ textAlign: 'center', padding: '3rem 1rem', color: '#999' }}>
-            No events scheduled at the moment.
+                  <div style={{ marginBottom: '1rem' }}>
+                    <p style={{ margin: '0 0 0.5rem 0', color: '#666', fontSize: '0.95rem' }}>
+                      <strong>📅 Date:</strong> {formatDate(event.eventDate || event.date)}
+                    </p>
+                    <p style={{ margin: '0 0 0.5rem 0', color: '#666', fontSize: '0.95rem' }}>
+                      <strong>⏰ Time:</strong> {formatTime(event.startTime)}
+                      {event.endTime && ` - ${formatTime(event.endTime)}`}
+                    </p>
+                    {event.location && (
+                      <p style={{ margin: '0', color: '#666', fontSize: '0.95rem' }}>
+                        <strong>📍 Location:</strong> {event.location}
+                      </p>
+                    )}
+                  </div>
+
+                  <p style={{ 
+                    margin: '0 0 1.5rem 0', 
+                    color: '#555',
+                    fontSize: '0.9rem',
+                    lineHeight: '1.5'
+                  }}>
+                    {event.description || 'No description available'}
+                  </p>
+
+                  <button 
+                    onClick={() => handleRegisterClick(event)}
+                    style={{ 
+                      width: '100%',
+                      padding: '0.75rem 1rem',
+                      background: registeredEvents.has(event.id) ? '#b0bec5' : '#8b4513',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: registeredEvents.has(event.id) ? 'not-allowed' : 'pointer',
+                      fontSize: '1rem',
+                      fontWeight: '500',
+                      transition: 'all 0.3s ease'
+                    }}
+                    disabled={registeredEvents.has(event.id)}
+                    onMouseEnter={(e) => {
+                      if (!registeredEvents.has(event.id)) {
+                        e.target.style.background = '#6d3410';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!registeredEvents.has(event.id)) {
+                        e.target.style.background = '#8b4513';
+                      }
+                    }}
+                  >
+                    {registeredEvents.has(event.id) ? '✅ Registered' : '📝 Register for Event'}
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {!loading && !error && filteredEvents.length === 0 && (
+          <div style={{ textAlign: 'center', padding: '3rem', color: '#999' }}>
+            {events.length === 0 
+              ? 'No events scheduled at the moment. Please check back later!' 
+              : 'No events match the selected filters.'}
           </div>
         )}
 

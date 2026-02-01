@@ -85,21 +85,39 @@ const translations = {
 const MOCK_STAFF = [
   {
     id: 1,
-    name: 'Rajesh Kumar',
+    fullName: 'Pandit Rajesh Kumar',
+    name: 'Pandit Rajesh Kumar',
     position: 'Head Priest',
     email: 'rajesh@temple.com',
-    phone: '9876543210',
+    phoneNumber: '+91-9876543210',
+    phone: '+91-9876543210',
     experience: 15,
-    description: 'Senior priest with 15 years of experience'
+    description: 'Senior priest with 15 years of experience in conducting Hindu rituals and ceremonies',
+    profileImageUrl: null
   },
   {
     id: 2,
+    fullName: 'Priya Singh',
     name: 'Priya Singh',
-    position: 'Manager',
+    position: 'Temple Manager',
     email: 'priya@temple.com',
-    phone: '9876543211',
+    phoneNumber: '+91-9876543211',
+    phone: '+91-9876543211',
     experience: 8,
-    description: 'Temple manager and administrator'
+    description: 'Experienced temple manager overseeing daily operations and administrative tasks',
+    profileImageUrl: null
+  },
+  {
+    id: 3,
+    fullName: 'Suresh Patel',
+    name: 'Suresh Patel',
+    position: 'Accountant',
+    email: 'suresh@temple.com',
+    phoneNumber: '+91-9876543212',
+    phone: '+91-9876543212',
+    experience: 10,
+    description: 'Certified accountant managing temple finances and donation records',
+    profileImageUrl: null
   }
 ];
 
@@ -113,13 +131,17 @@ export default function StaffAdmin() {
   const [error, setError] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
   const [formData, setFormData] = useState({
+    fullName: '',
     name: '',
     position: '',
     email: '',
+    phoneNumber: '',
     phone: '',
     experience: '',
-    description: ''
+    description: '',
+    profileImageUrl: ''
   });
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
 
@@ -135,7 +157,8 @@ export default function StaffAdmin() {
     try {
       setLoading(true);
       const data = await staffAPI.getAll();
-      setStaff(Array.isArray(data) ? data : data?.data || []);
+      const staffData = Array.isArray(data) ? data : data?.data || [];
+      setStaff(staffData.length > 0 ? staffData : MOCK_STAFF);
       setError(null);
     } catch (err) {
       console.warn('Backend not available, using mock data:', err.message);
@@ -148,33 +171,77 @@ export default function StaffAdmin() {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData(prev => ({ 
+      ...prev, 
+      [name]: value,
+      // Keep both name formats in sync
+      ...(name === 'fullName' && { name: value }),
+      ...(name === 'name' && { fullName: value }),
+      ...(name === 'phoneNumber' && { phone: value }),
+      ...(name === 'phone' && { phoneNumber: value })
+    }));
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        alert('Image size should be less than 5MB');
+        return;
+      }
+      if (!file.type.startsWith('image/')) {
+        alert('Please select an image file');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+        setFormData(prev => ({ ...prev, profileImageUrl: reader.result }));
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      const submitData = {
+        fullName: formData.fullName || formData.name,
+        name: formData.fullName || formData.name,
+        position: formData.position,
+        email: formData.email,
+        phoneNumber: formData.phoneNumber || formData.phone,
+        phone: formData.phoneNumber || formData.phone,
+        experience: formData.experience,
+        description: formData.description,
+        profileImageUrl: formData.profileImageUrl
+      };
+
       if (editingId) {
-        await staffAPI.update(editingId, formData);
+        await staffAPI.update(editingId, submitData);
       } else {
-        await staffAPI.create(formData);
+        await staffAPI.create(submitData);
       }
       fetchStaff();
       resetForm();
     } catch (err) {
-      alert(err.response?.data?.message || t.error);
+      alert(err.response?.data?.message || t.error || 'Error saving staff member');
     }
   };
 
   const handleEdit = (staffMember) => {
     setFormData({
-      name: staffMember.name || '',
+      fullName: staffMember.fullName || staffMember.name || '',
+      name: staffMember.fullName || staffMember.name || '',
       position: staffMember.position || '',
       email: staffMember.email || '',
-      phone: staffMember.phone || '',
+      phoneNumber: staffMember.phoneNumber || staffMember.phone || '',
+      phone: staffMember.phoneNumber || staffMember.phone || '',
       experience: staffMember.experience || '',
-      description: staffMember.description || ''
+      description: staffMember.description || '',
+      profileImageUrl: staffMember.profileImageUrl || ''
     });
+    setImagePreview(staffMember.profileImageUrl || null);
     setEditingId(staffMember.id);
     setShowForm(true);
   };
@@ -185,19 +252,23 @@ export default function StaffAdmin() {
       fetchStaff();
       setShowDeleteConfirm(null);
     } catch (err) {
-      alert(err.response?.data?.message || t.error);
+      alert(err.response?.data?.message || t.error || 'Error deleting staff member');
     }
   };
 
   const resetForm = () => {
     setFormData({
+      fullName: '',
       name: '',
       position: '',
       email: '',
+      phoneNumber: '',
       phone: '',
       experience: '',
-      description: ''
+      description: '',
+      profileImageUrl: ''
     });
+    setImagePreview(null);
     setEditingId(null);
     setShowForm(false);
   };
@@ -205,13 +276,28 @@ export default function StaffAdmin() {
   if (loading) {
     return (
       <div style={{ padding: '40px 20px', textAlign: 'center', minHeight: '60vh' }}>
-        <p>{t.loading}</p>
+        <div style={{
+          display: 'inline-block',
+          width: '50px',
+          height: '50px',
+          border: '5px solid #f3f3f3',
+          borderTop: '5px solid #0B1C3F',
+          borderRadius: '50%',
+          animation: 'spin 1s linear infinite'
+        }}></div>
+        <p style={{ fontSize: '18px', color: '#666', marginTop: '20px' }}>{t.loading}</p>
+        <style>{`
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        `}</style>
       </div>
     );
   }
 
   // Check admin access
-  if (isAuthenticated && user?.role !== 'admin') {
+  if (!isAuthenticated || user?.role !== 'admin') {
     return (
       <div style={{
         padding: '40px 20px',
@@ -222,8 +308,8 @@ export default function StaffAdmin() {
         alignItems: 'center',
         textAlign: 'center'
       }}>
-        <h2 style={{ color: '#d32f2f', marginBottom: '20px' }}>{t.accessDenied}</h2>
-        <p style={{ color: '#666', marginBottom: '30px' }}>{t.adminOnly}</p>
+        <h2 style={{ color: '#d32f2f', marginBottom: '20px' }}>{t.accessDenied || 'Access Denied'}</h2>
+        <p style={{ color: '#666', marginBottom: '30px' }}>{t.adminOnly || 'Only admins can access this page'}</p>
         <a href="/staff" style={{
           display: 'inline-block',
           padding: '10px 20px',
@@ -233,7 +319,7 @@ export default function StaffAdmin() {
           borderRadius: '4px',
           fontWeight: '500'
         }}>
-          {t.backToStaff}
+          {t.backToStaff || 'Back to Staff'}
         </a>
       </div>
     );
@@ -250,7 +336,7 @@ export default function StaffAdmin() {
           marginBottom: '30px'
         }}>
           <h1 style={{ fontSize: '2rem', color: '#0B1C3F', margin: 0 }}>
-            {t.staff} Management
+            {t.staff || 'Staff'} Management
           </h1>
           <button
             onClick={() => {
@@ -271,7 +357,7 @@ export default function StaffAdmin() {
             onMouseEnter={e => e.target.style.opacity = '0.9'}
             onMouseLeave={e => e.target.style.opacity = '1'}
           >
-            + {t.addStaff}
+            + {t.addStaff || 'Add Staff Member'}
           </button>
         </div>
 
@@ -297,7 +383,7 @@ export default function StaffAdmin() {
             boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
           }}>
             <h2 style={{ color: '#0B1C3F', marginBottom: '20px', marginTop: 0 }}>
-              {editingId ? t.editStaff : t.addStaff}
+              {editingId ? (t.editStaff || 'Edit Staff Member') : (t.addStaff || 'Add Staff Member')}
             </h2>
 
             <form onSubmit={handleSubmit}>
@@ -309,12 +395,12 @@ export default function StaffAdmin() {
               }}>
                 <div>
                   <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>
-                    {t.name}
+                    {t.name || 'Full Name'} <span style={{ color: 'red' }}>*</span>
                   </label>
                   <input
                     type="text"
-                    name="name"
-                    value={formData.name}
+                    name="fullName"
+                    value={formData.fullName}
                     onChange={handleInputChange}
                     required
                     style={{
@@ -329,13 +415,14 @@ export default function StaffAdmin() {
                 </div>
                 <div>
                   <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>
-                    {t.position}
+                    {t.position || 'Position'} <span style={{ color: 'red' }}>*</span>
                   </label>
                   <input
                     type="text"
                     name="position"
                     value={formData.position}
                     onChange={handleInputChange}
+                    required
                     style={{
                       width: '100%',
                       padding: '10px',
@@ -356,7 +443,7 @@ export default function StaffAdmin() {
               }}>
                 <div>
                   <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>
-                    {t.email}
+                    {t.email || 'Email'}
                   </label>
                   <input
                     type="email"
@@ -375,13 +462,14 @@ export default function StaffAdmin() {
                 </div>
                 <div>
                   <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>
-                    {t.phone}
+                    {t.phone || 'Phone'} <span style={{ color: 'red' }}>*</span>
                   </label>
                   <input
                     type="tel"
-                    name="phone"
-                    value={formData.phone}
+                    name="phoneNumber"
+                    value={formData.phoneNumber}
                     onChange={handleInputChange}
+                    required
                     style={{
                       width: '100%',
                       padding: '10px',
@@ -396,7 +484,7 @@ export default function StaffAdmin() {
 
               <div style={{ marginBottom: '15px' }}>
                 <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>
-                  {t.experience}
+                  {t.experience || 'Experience (years)'}
                 </label>
                 <input
                   type="number"
@@ -414,9 +502,42 @@ export default function StaffAdmin() {
                 />
               </div>
 
+              <div style={{ marginBottom: '15px' }}>
+                <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>
+                  Profile Photo (Optional, max 5MB)
+                </label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  style={{
+                    width: '100%',
+                    padding: '10px',
+                    border: '1px solid #ddd',
+                    borderRadius: '4px',
+                    boxSizing: 'border-box'
+                  }}
+                />
+                {imagePreview && (
+                  <div style={{ marginTop: '10px', textAlign: 'center' }}>
+                    <img 
+                      src={imagePreview} 
+                      alt="Preview" 
+                      style={{ 
+                        maxWidth: '150px', 
+                        maxHeight: '150px', 
+                        borderRadius: '8px',
+                        objectFit: 'cover',
+                        border: '2px solid #ddd' 
+                      }}
+                    />
+                  </div>
+                )}
+              </div>
+
               <div style={{ marginBottom: '20px' }}>
                 <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>
-                  {t.description}
+                  {t.description || 'Description'}
                 </label>
                 <textarea
                   name="description"
@@ -451,7 +572,7 @@ export default function StaffAdmin() {
                   onMouseEnter={e => e.target.style.opacity = '0.9'}
                   onMouseLeave={e => e.target.style.opacity = '1'}
                 >
-                  {t.save}
+                  {t.save || 'Save'}
                 </button>
                 <button
                   type="button"
@@ -469,7 +590,7 @@ export default function StaffAdmin() {
                   onMouseEnter={e => e.target.style.backgroundColor = '#e8e8e8'}
                   onMouseLeave={e => e.target.style.backgroundColor = '#f5f5f5'}
                 >
-                  {t.cancel}
+                  {t.cancel || 'Cancel'}
                 </button>
               </div>
             </form>
@@ -484,7 +605,7 @@ export default function StaffAdmin() {
             backgroundColor: 'white',
             borderRadius: '8px'
           }}>
-            <p style={{ fontSize: '16px', color: '#999' }}>{t.noStaff}</p>
+            <p style={{ fontSize: '16px', color: '#999' }}>{t.noStaff || 'No staff members'}</p>
           </div>
         ) : (
           <div style={{
@@ -503,30 +624,57 @@ export default function StaffAdmin() {
                   transition: 'transform 0.3s ease'
                 }}
               >
+                {/* Profile Image */}
                 <div style={{
-                  padding: '20px',
-                  background: 'linear-gradient(135deg, #0B1C3F 0%, #112A57 100%)',
-                  color: 'white'
+                  height: '200px',
+                  background: 'linear-gradient(135deg, #0B1C3F 0%, #1a3a6b 100%)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  overflow: 'hidden'
                 }}>
-                  <h3 style={{ margin: '0 0 5px 0' }}>{member.name}</h3>
-                  <p style={{ margin: 0, fontSize: '12px', opacity: 0.9 }}>
-                    {member.position}
-                  </p>
+                  {member.profileImageUrl ? (
+                    <img 
+                      src={member.profileImageUrl} 
+                      alt={member.fullName || member.name}
+                      style={{ 
+                        width: '100%', 
+                        height: '100%', 
+                        objectFit: 'cover' 
+                      }}
+                      onError={(e) => { 
+                        e.currentTarget.style.display = 'none';
+                        e.currentTarget.parentElement.innerHTML = '<span style="font-size: 4rem; color: white">👤</span>';
+                      }}
+                    />
+                  ) : (
+                    <span style={{ fontSize: '4rem', color: 'white' }}>👤</span>
+                  )}
                 </div>
 
                 <div style={{ padding: '20px' }}>
+                  <h3 style={{ margin: '0 0 5px 0', color: '#0B1C3F' }}>
+                    {member.fullName || member.name}
+                  </h3>
+                  <p style={{ margin: '0 0 10px 0', fontSize: '12px', color: '#E6B325', fontWeight: 'bold' }}>
+                    {member.position}
+                  </p>
                   <p style={{ margin: '0 0 10px 0', color: '#666', fontSize: '14px' }}>
                     📧 {member.email}
                   </p>
                   <p style={{ margin: '0 0 10px 0', color: '#666', fontSize: '14px' }}>
-                    📞 {member.phone}
+                    📞 {member.phoneNumber || member.phone}
                   </p>
-                  <p style={{ margin: '0 0 15px 0', color: '#666', fontSize: '14px' }}>
-                    ⭐ {member.experience} years experience
-                  </p>
-                  <p style={{ margin: '0 0 20px 0', color: '#666', fontSize: '13px', lineHeight: '1.4' }}>
-                    {member.description?.substring(0, 100)}...
-                  </p>
+                  {member.experience && (
+                    <p style={{ margin: '0 0 15px 0', color: '#666', fontSize: '14px' }}>
+                      ⭐ {member.experience} years experience
+                    </p>
+                  )}
+                  {member.description && (
+                    <p style={{ margin: '0 0 20px 0', color: '#666', fontSize: '13px', lineHeight: '1.4' }}>
+                      {member.description.substring(0, 100)}{member.description.length > 100 ? '...' : ''}
+                    </p>
+                  )}
 
                   <div style={{ display: 'flex', gap: '10px' }}>
                     <button
@@ -546,7 +694,7 @@ export default function StaffAdmin() {
                       onMouseEnter={e => e.target.style.opacity = '0.9'}
                       onMouseLeave={e => e.target.style.opacity = '1'}
                     >
-                      {t.edit}
+                      {t.edit || 'Edit'}
                     </button>
                     <button
                       onClick={() => setShowDeleteConfirm(member.id)}
@@ -565,7 +713,7 @@ export default function StaffAdmin() {
                       onMouseEnter={e => e.target.style.opacity = '0.9'}
                       onMouseLeave={e => e.target.style.opacity = '1'}
                     >
-                      {t.delete}
+                      {t.delete || 'Delete'}
                     </button>
                   </div>
                 </div>
@@ -597,10 +745,10 @@ export default function StaffAdmin() {
               textAlign: 'center'
             }}>
               <h3 style={{ color: '#0B1C3F', marginBottom: '15px', marginTop: 0 }}>
-                {t.deleteStaff}
+                {t.deleteStaff || 'Delete Staff Member'}
               </h3>
               <p style={{ color: '#666', marginBottom: '25px' }}>
-                {t.confirmDelete}
+                {t.confirmDelete || 'Are you sure you want to delete this staff member?'}
               </p>
               <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
                 <button
@@ -618,7 +766,7 @@ export default function StaffAdmin() {
                   onMouseEnter={e => e.target.style.opacity = '0.9'}
                   onMouseLeave={e => e.target.style.opacity = '1'}
                 >
-                  {t.delete}
+                  {t.delete || 'Delete'}
                 </button>
                 <button
                   onClick={() => setShowDeleteConfirm(null)}
@@ -635,7 +783,7 @@ export default function StaffAdmin() {
                   onMouseEnter={e => e.target.style.backgroundColor = '#e8e8e8'}
                   onMouseLeave={e => e.target.style.backgroundColor = '#f5f5f5'}
                 >
-                  {t.cancel}
+                  {t.cancel || 'Cancel'}
                 </button>
               </div>
             </div>

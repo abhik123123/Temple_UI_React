@@ -1,143 +1,415 @@
+import { useState, useEffect } from 'react';
 import { useLanguage } from '../context/LanguageContext';
-import { useAPI } from '../hooks/useAPI';
-import { servicesAPI } from '../services/api';
+import { getAllServices } from '../services/servicesData';
+import { useNavigate } from 'react-router-dom';
 
 export default function Services() {
   const { t } = useLanguage();
-  const { data: backendServices, loading, error } = useAPI(servicesAPI.getAll);
+  const [services, setServices] = useState([]);
+  const navigate = useNavigate();
 
-  // Fallback mock data
-  const mockServices = [
-    {
-      id: 1,
-      name: 'Daily Pujas',
-      price: 'Free',
-      description: 'Participate in our daily morning and evening prayer services.',
-      details: ['Morning Prayers at 5:00 AM', 'Evening Prayers at 7:00 PM', 'Guided meditation'],
-      icon: '🙏'
-    },
-    {
-      id: 2,
-      name: 'Special Prayers',
-      price: '₹500 - ₹2000',
-      description: 'Customized prayer ceremonies for special occasions and personal intentions.',
-      details: ['Family blessings', 'Health & wellness prayers', 'Success rituals'],
-      icon: '✨'
-    },
-    {
-      id: 3,
-      name: 'Spiritual Counseling',
-      price: '₹1000/session',
-      description: 'One-on-one guidance from our experienced spiritual advisors.',
-      details: ['Personal consultation', 'Life guidance', 'Spiritual development'],
-      icon: '📖'
-    },
-    {
-      id: 4,
-      name: 'Wedding Ceremonies',
-      price: '₹5000 - ₹15000',
-      description: 'Complete wedding planning and sacred ceremony arrangements.',
-      details: ['Venue decoration', 'Priest coordination', 'Ritual planning'],
-      icon: '💒'
-    },
-    {
-      id: 5,
-      name: 'Yoga & Meditation',
-      price: '₹2000/month',
-      description: 'Regular classes for physical and mental wellness.',
-      details: ['Morning yoga classes', 'Evening meditation', 'Breathing techniques'],
-      icon: '🧘'
-    },
-    {
-      id: 6,
-      name: 'Temple Tours',
-      price: '₹200/person',
-      description: 'Guided tours explaining the temple history and architecture.',
-      details: ['Heritage tour', 'Historical insights', 'Photography allowed'],
-      icon: '🏛️'
-    }
-  ];
-
-  const displayServices = loading
-    ? []
-    : backendServices?.length > 0
-      ? backendServices
-      : [];
-
-  const getServiceDetails = (service) => {
-    // Backend returns details as pipe-separated string: "Includes | Aarti | Blessing | Prasad"
-    // Split by pipe and trim whitespace
-    if (typeof service.details === 'string') {
-      return service.details.split('|').map(item => item.trim()).filter(item => item);
-    }
-    // Fallback for array format (mock data)
-    return service.details || service.features || [];
-  };
+  useEffect(() => {
+    // Load services from localStorage
+    setServices(getAllServices());
+  }, []);
 
   return (
-    <div className="page">
-      <div className="hero" style={{
-        backgroundImage: 'url(/images/temple-images/saibaba.jpg)',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundAttachment: 'fixed',
-        position: 'relative'
+    <div style={{ backgroundColor: '#f9fafb', minHeight: '100vh' }}>
+      {/* Hero Section */}
+      <div style={{
+        background: 'linear-gradient(135deg, #0B1C3F 0%, #1a3a6b 50%, #0B1C3F 100%)',
+        padding: '80px 20px',
+        textAlign: 'center',
+        position: 'relative',
+        overflow: 'hidden'
       }}>
+        {/* Decorative background pattern */}
         <div style={{
           position: 'absolute',
           top: 0,
           left: 0,
           right: 0,
           bottom: 0,
-          background: 'rgba(0, 0, 0, 0.5)'
+          backgroundImage: 'radial-gradient(circle at 20% 50%, rgba(230, 179, 37, 0.1) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(230, 179, 37, 0.1) 0%, transparent 50%)',
+          pointerEvents: 'none'
         }}></div>
-        <div style={{ position: 'relative', zIndex: 1, textAlign: 'center' }}>
-          <h1 style={{ color: 'white' }}>🙏 {t('services_title')}</h1>
-          <p style={{ color: '#f0f0f0' }}>{t('services_description')}</p>
+        
+        <div style={{ position: 'relative', zIndex: 1, maxWidth: '1200px', margin: '0 auto' }}>
+          <h1 style={{
+            fontSize: '3.5rem',
+            color: 'white',
+            marginBottom: '15px',
+            fontWeight: 'bold',
+            textShadow: '2px 2px 4px rgba(0,0,0,0.3)',
+            letterSpacing: '1px'
+          }}>
+            🙏 {t('services_title') || 'Our Services'}
+          </h1>
+          <div style={{
+            height: '4px',
+            width: '100px',
+            backgroundColor: '#E6B325',
+            margin: '0 auto 20px',
+            borderRadius: '2px'
+          }}></div>
+          <p style={{
+            fontSize: '1.2rem',
+            color: '#b0c4de',
+            maxWidth: '600px',
+            margin: '0 auto',
+            lineHeight: '1.6'
+          }}>
+            {t('services_description') || 'Discover our spiritual services and offerings'}
+          </p>
         </div>
       </div>
 
-      <div className="container">
-        <h2 style={{ textAlign: 'center', marginBottom: '2rem', color: '#8b4513' }}>{t('services_title')}</h2>
-
-        {loading && (
-          <div style={{ textAlign: 'center', padding: '2rem', color: '#666' }}>
-            Loading services...
-          </div>
-        )}
-
-        {error && (
-          <div style={{ background: '#ffe5e5', padding: '1rem', borderRadius: '4px', color: '#d32f2f', marginBottom: '2rem' }}>
-            ⚠️ {error} - Showing default services
-          </div>
-        )}
-
-        <div className="cards-grid">
-          {displayServices.map(service => (
-            <div key={service.id} className="card">
-              <div className="card-image" style={{ fontSize: '2.5rem', padding: '1rem', textAlign: 'center', background: 'linear-gradient(135deg, #d4a574 0%, #a0522d 100%)' }}>
-                {service.icon || '🙏'}
+      {/* Main Content */}
+      <div style={{ padding: '60px 20px' }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+          {/* Featured: Daily Prayers Card */}
+          <div 
+            onClick={() => navigate('/daily-prayers')}
+            style={{
+              backgroundColor: 'white',
+              borderRadius: '16px',
+              overflow: 'hidden',
+              boxShadow: '0 8px 24px rgba(230, 179, 37, 0.2)',
+              marginBottom: '50px',
+              cursor: 'pointer',
+              border: '3px solid #E6B325',
+              transition: 'all 0.3s ease'
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.transform = 'translateY(-5px)';
+              e.currentTarget.style.boxShadow = '0 12px 32px rgba(230, 179, 37, 0.3)';
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 8px 24px rgba(230, 179, 37, 0.2)';
+            }}
+          >
+            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center' }}>
+              <div style={{
+                flex: '0 0 300px',
+                background: 'linear-gradient(135deg, #E6B325 0%, #d4a017 100%)',
+                padding: '50px 30px',
+                textAlign: 'center',
+                color: 'white'
+              }}>
+                <div style={{ fontSize: '6rem', marginBottom: '15px' }}>🙏</div>
+                <h2 style={{ margin: 0, fontSize: '2rem', fontWeight: 'bold' }}>Daily Prayers</h2>
               </div>
-              <div className="card-content">
-                <h3>{service.name}</h3>
-                <p style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#8b4513', marginBottom: '0.5rem' }}>{service.price}</p>
-                <p>{service.description}</p>
-                <ul style={{ marginLeft: '1.5rem', marginBottom: '1rem' }}>
-                  {getServiceDetails(service).map((feature, idx) => (
-                    <li key={idx} style={{ marginBottom: '0.5rem' }}>✓ {feature}</li>
-                  ))}
-                </ul>
-                <button className="btn" style={{ width: '100%' }}>Book Service</button>
+              <div style={{ flex: 1, padding: '40px', minWidth: '300px' }}>
+                <div style={{
+                  display: 'inline-block',
+                  padding: '6px 16px',
+                  backgroundColor: '#4caf50',
+                  color: 'white',
+                  borderRadius: '20px',
+                  fontSize: '0.85rem',
+                  fontWeight: 'bold',
+                  marginBottom: '15px'
+                }}>
+                  ⭐ FEATURED SERVICE
+                </div>
+                <h3 style={{ 
+                  fontSize: '1.8rem', 
+                  color: '#0B1C3F', 
+                  margin: '0 0 15px 0',
+                  fontWeight: '700'
+                }}>
+                  Morning and Evening Spiritual Guidance
+                </h3>
+                <p style={{ 
+                  color: '#666', 
+                  fontSize: '1.1rem', 
+                  lineHeight: '1.7',
+                  marginBottom: '20px'
+                }}>
+                  Join us for sacred daily poojas throughout the day. View complete schedule with timings 
+                  for morning abhishekam, sahasranama archana, evening deeparadhana, and special weekly prayers.
+                </p>
+                <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '1.5rem' }}>🌅</span>
+                    <span style={{ color: '#555' }}>Morning Prayers</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '1.5rem' }}>🌆</span>
+                    <span style={{ color: '#555' }}>Evening Prayers</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '1.5rem' }}>📅</span>
+                    <span style={{ color: '#555' }}>Weekly Specials</span>
+                  </div>
+                </div>
+                <button
+                  style={{
+                    marginTop: '25px',
+                    padding: '14px 32px',
+                    backgroundColor: '#0B1C3F',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontSize: '16px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease'
+                  }}
+                  onMouseEnter={e => e.target.style.opacity = '0.9'}
+                  onMouseLeave={e => e.target.style.opacity = '1'}
+                >
+                  View Prayer Schedule →
+                </button>
               </div>
             </div>
-          ))}
-        </div>
-
-        {displayServices.length === 0 && (
-          <div style={{ textAlign: 'center', padding: '3rem 1rem', color: '#999' }}>
-            No services available at the moment.
           </div>
-        )}
+
+          {/* Temporarily hidden: Pooja Books Card */}
+          {/* <div 
+            onClick={() => navigate('/pooja-books')}
+            style={{
+              backgroundColor: 'white',
+              borderRadius: '16px',
+              overflow: 'hidden',
+              boxShadow: '0 8px 24px rgba(11, 28, 63, 0.2)',
+              marginBottom: '50px',
+              cursor: 'pointer',
+              border: '3px solid #0B1C3F',
+              transition: 'all 0.3s ease'
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.transform = 'translateY(-5px)';
+              e.currentTarget.style.boxShadow = '0 12px 32px rgba(11, 28, 63, 0.3)';
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 8px 24px rgba(11, 28, 63, 0.2)';
+            }}
+          >
+            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center' }}>
+              <div style={{
+                flex: '0 0 300px',
+                background: 'linear-gradient(135deg, #0B1C3F 0%, #1a3a6b 100%)',
+                padding: '50px 30px',
+                textAlign: 'center',
+                color: 'white'
+              }}>
+                <div style={{ fontSize: '6rem', marginBottom: '15px' }}>📚</div>
+                <h2 style={{ margin: 0, fontSize: '2rem', fontWeight: 'bold' }}>Pooja Books</h2>
+              </div>
+              <div style={{ flex: 1, padding: '40px', minWidth: '300px' }}>
+                <div style={{
+                  display: 'inline-block',
+                  padding: '6px 16px',
+                  backgroundColor: '#9c27b0',
+                  color: 'white',
+                  borderRadius: '20px',
+                  fontSize: '0.85rem',
+                  fontWeight: 'bold',
+                  marginBottom: '15px'
+                }}>
+                  📖 VEDIC KNOWLEDGE
+                </div>
+                <h3 style={{ 
+                  fontSize: '1.8rem', 
+                  color: '#0B1C3F', 
+                  margin: '0 0 15px 0',
+                  fontWeight: '700'
+                }}>
+                  Learn Vedic Knowledge and Traditions
+                </h3>
+                <p style={{ 
+                  color: '#666', 
+                  fontSize: '1.1rem', 
+                  lineHeight: '1.7',
+                  marginBottom: '20px'
+                }}>
+                  Explore our comprehensive collection of sacred texts, puja guides, and spiritual literature. 
+                  From beginner-friendly guides to advanced Vedic scriptures, discover the wisdom of ancient traditions.
+                </p>
+                <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '1.5rem' }}>🕉️</span>
+                    <span style={{ color: '#555' }}>Sacred Texts</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '1.5rem' }}>📖</span>
+                    <span style={{ color: '#555' }}>Puja Guides</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '1.5rem' }}>⬇️</span>
+                    <span style={{ color: '#555' }}>Downloadable</span>
+                  </div>
+                </div>
+                <button
+                  style={{
+                    marginTop: '25px',
+                    padding: '14px 32px',
+                    backgroundColor: '#E6B325',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontSize: '16px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease'
+                  }}
+                  onMouseEnter={e => e.target.style.opacity = '0.9'}
+                  onMouseLeave={e => e.target.style.opacity = '1'}
+                >
+                  Browse Pooja Books →
+                </button>
+              </div>
+            </div>
+          </div> */}
+
+          {/* Other Services Grid */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))',
+            gap: '30px'
+          }}>
+            {services.map(service => (
+              <div
+                key={service.id}
+                style={{
+                  backgroundColor: 'white',
+                  borderRadius: '12px',
+                  overflow: 'hidden',
+                  boxShadow: '0 4px 6px rgba(0,0,0,0.07)',
+                  transition: 'all 0.3s ease',
+                  cursor: 'pointer',
+                  border: '1px solid #e0e0e0'
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.transform = 'translateY(-8px)';
+                  e.currentTarget.style.boxShadow = '0 12px 24px rgba(0,0,0,0.15)';
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 4px 6px rgba(0,0,0,0.07)';
+                }}
+              >
+                {/* Service Icon Header */}
+                <div style={{
+                  padding: '40px 25px',
+                  background: 'linear-gradient(135deg, #0B1C3F 0%, #1a3a6b 100%)',
+                  color: 'white',
+                  textAlign: 'center',
+                  position: 'relative'
+                }}>
+                  <div style={{
+                    fontSize: '4rem',
+                    marginBottom: '15px',
+                    filter: 'drop-shadow(2px 2px 4px rgba(0,0,0,0.2))'
+                  }}>
+                    {service.icon || '🙏'}
+                  </div>
+                  <h3 style={{ 
+                    margin: '0', 
+                    fontSize: '1.5rem',
+                    fontWeight: '600',
+                    lineHeight: '1.3'
+                  }}>
+                    {service.name}
+                  </h3>
+                </div>
+
+                {/* Service Details */}
+                <div style={{ padding: '25px' }}>
+                  {/* Price Badge */}
+                  <div style={{
+                    display: 'inline-block',
+                    padding: '8px 16px',
+                    background: 'linear-gradient(135deg, #E6B325 0%, #d4a017 100%)',
+                    color: 'white',
+                    borderRadius: '20px',
+                    fontSize: '1.1rem',
+                    fontWeight: 'bold',
+                    marginBottom: '15px',
+                    boxShadow: '0 2px 8px rgba(230, 179, 37, 0.3)'
+                  }}>
+                    💰 {service.price}
+                  </div>
+
+                  {/* Description */}
+                  <p style={{
+                    color: '#666',
+                    fontSize: '15px',
+                    lineHeight: '1.6',
+                    marginBottom: '20px',
+                    minHeight: '45px'
+                  }}>
+                    {service.description}
+                  </p>
+
+                  {/* Features List */}
+                  {service.details && service.details.length > 0 && (
+                    <div style={{
+                      backgroundColor: '#f8f9fa',
+                      padding: '15px',
+                      borderRadius: '8px',
+                      marginBottom: '20px'
+                    }}>
+                      <ul style={{ 
+                        margin: 0, 
+                        paddingLeft: '20px',
+                        listStyle: 'none'
+                      }}>
+                        {service.details.map((feature, idx) => (
+                          <li key={idx} style={{ 
+                            marginBottom: '8px',
+                            color: '#555',
+                            fontSize: '14px',
+                            position: 'relative',
+                            paddingLeft: '8px'
+                          }}>
+                            <span style={{ 
+                              color: '#E6B325', 
+                              marginRight: '8px',
+                              fontWeight: 'bold'
+                            }}>✓</span>
+                            {feature}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Book Button */}
+                  <button
+                    style={{
+                      width: '100%',
+                      padding: '14px',
+                      background: 'linear-gradient(135deg, #0B1C3F 0%, #1a3a6b 100%)',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      fontSize: '15px',
+                      fontWeight: '600',
+                      transition: 'all 0.3s ease',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px'
+                    }}
+                    onMouseEnter={e => {
+                      e.target.style.opacity = '0.9';
+                      e.target.style.transform = 'scale(1.02)';
+                    }}
+                    onMouseLeave={e => {
+                      e.target.style.opacity = '1';
+                      e.target.style.transform = 'scale(1)';
+                    }}
+                  >
+                    📅 Book Service
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );

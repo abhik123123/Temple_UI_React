@@ -45,7 +45,21 @@ const translations = {
     confirmDelete: 'Are you sure you want to delete this event?',
     accessDenied: 'Access Denied',
     adminOnly: 'Only admins can access this page',
-    backToEvents: 'Back to Events'
+    backToEvents: 'Back to Events',
+    viewRegistrations: 'View Registrations',
+    registrations: 'Registrations',
+    noRegistrations: 'No registrations yet',
+    familyGotram: 'Family Gotram',
+    relation: 'Relation',
+    rasi: 'Rasi',
+    nakshatra: 'Nakshatra',
+    phone: 'Phone',
+    email: 'Email',
+    address: 'Address',
+    registeredOn: 'Registered On',
+    totalRegistrations: 'Total Registrations',
+    exportToCSV: 'Export to CSV',
+    close: 'Close'
   },
   te: {
     events: 'ఈవెంట్‌లు',
@@ -123,6 +137,8 @@ export default function EventsAdmin() {
     imageFile: null
   });
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
+  const [showRegistrationsModal, setShowRegistrationsModal] = useState(false);
+  const [selectedEventRegistrations, setSelectedEventRegistrations] = useState(null);
 
   useEffect(() => {
     if (isAuthenticated && user?.role === 'admin') {
@@ -158,6 +174,57 @@ export default function EventsAdmin() {
     }
   };
 
+  const getEventRegistrations = (eventId) => {
+    try {
+      const registrations = JSON.parse(localStorage.getItem('temple_registrations') || '[]');
+      return registrations.filter(reg => reg.eventId === eventId);
+    } catch (error) {
+      console.error('Error loading registrations:', error);
+      return [];
+    }
+  };
+
+  const handleViewRegistrations = (event) => {
+    const registrations = getEventRegistrations(event.id);
+    setSelectedEventRegistrations({
+      event: event,
+      registrations: registrations
+    });
+    setShowRegistrationsModal(true);
+  };
+
+  const exportToCSV = () => {
+    if (!selectedEventRegistrations || selectedEventRegistrations.registrations.length === 0) {
+      alert('No registrations to export');
+      return;
+    }
+
+    const { event, registrations } = selectedEventRegistrations;
+    
+    // Create CSV header
+    let csv = 'Event Name,Registration Date,Family Gotram,Name,Surname,Relation,Rasi,Nakshatra,Phone,Email,Address\n';
+    
+    // Add data rows
+    registrations.forEach(reg => {
+      const regDate = new Date(reg.createdAt).toLocaleDateString();
+      reg.members.forEach(member => {
+        csv += '"' + event.title + '","' + regDate + '","' + (reg.familyGotram || '') + '","' + member.name + '","' + member.surname + '","' + member.relation + '","' + (member.rasi || '') + '","' + (member.nakshatra || '') + '","' + member.phoneNo + '","' + member.email + '","' + (member.address || '') + '"\n';
+      });
+    });
+
+    // Create download link
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    const filename = event.title.replace(/\s+/g, '_') + '_registrations.csv';
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+  };
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
@@ -189,7 +256,8 @@ export default function EventsAdmin() {
             (blob) => {
               if (blob) {
                 // Create a new File object from the blob
-                const jpegFile = new File([blob], `image-${Date.now()}.jpg`, { type: 'image/jpeg' });
+                const fileName = 'image-' + Date.now() + '.jpg';
+                const jpegFile = new File([blob], fileName, { type: 'image/jpeg' });
                 
                 // Also create preview
                 const previewReader = new FileReader();
@@ -353,7 +421,7 @@ export default function EventsAdmin() {
     const minutes = parts[1] || '00';
     const ampm = hours >= 12 ? 'PM' : 'AM';
     const displayHour = hours % 12 || 12;
-    return `${displayHour}:${minutes} ${ampm}`;
+    return displayHour + ':' + minutes + ' ' + ampm;
   };
 
   if (loading) {
@@ -762,7 +830,7 @@ export default function EventsAdmin() {
                   </p>
                   <p style={{ margin: '0 0 10px 0', color: '#666', fontSize: '14px' }}>
                     🕐 {formatTime(event.startTime)}
-                    {event.endTime && ` - ${formatTime(event.endTime)}`}
+                    {event.endTime && ' - ' + formatTime(event.endTime)}
                   </p>
                   <p style={{ margin: '0 0 15px 0', color: '#666', fontSize: '14px' }}>
                     📍 {event.location}
@@ -809,6 +877,25 @@ export default function EventsAdmin() {
                       onMouseLeave={e => e.target.style.opacity = '1'}
                     >
                       {t.delete}
+                    </button>
+                    <button
+                      onClick={() => handleViewRegistrations(event)}
+                      style={{
+                        flex: 1,
+                        padding: '10px',
+                        backgroundColor: '#0B1C3F',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        fontSize: '13px',
+                        fontWeight: '500',
+                        transition: 'all 0.3s ease'
+                      }}
+                      onMouseEnter={e => e.target.style.opacity = '0.9'}
+                      onMouseLeave={e => e.target.style.opacity = '1'}
+                    >
+                      {t.viewRegistrations}
                     </button>
                   </div>
                 </div>
@@ -879,6 +966,167 @@ export default function EventsAdmin() {
                   onMouseLeave={e => e.target.style.backgroundColor = '#f5f5f5'}
                 >
                   {t.cancel}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Registrations Modal */}
+        {showRegistrationsModal && selectedEventRegistrations && (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 1000,
+            padding: '20px'
+          }}>
+            <div style={{
+              backgroundColor: 'white',
+              borderRadius: '8px',
+              padding: '30px',
+              maxWidth: '900px',
+              width: '100%',
+              maxHeight: '90vh',
+              overflowY: 'auto'
+            }}>
+              <h3 style={{ color: '#0B1C3F', marginBottom: '10px', marginTop: 0 }}>
+                {t.registrations} - {selectedEventRegistrations.event.title}
+              </h3>
+              <p style={{ color: '#666', marginBottom: '20px', fontSize: '14px' }}>
+                {t.totalRegistrations}: {selectedEventRegistrations.registrations.reduce((acc, reg) => acc + (reg.members?.length || 0), 0)} people
+              </p>
+              
+              {selectedEventRegistrations.registrations.length === 0 ? (
+                <p style={{ color: '#666', marginBottom: '25px', textAlign: 'center', padding: '40px' }}>
+                  {t.noRegistrations}
+                </p>
+              ) : (
+                <div style={{ maxHeight: '500px', overflowY: 'auto', marginBottom: '20px' }}>
+                  {selectedEventRegistrations.registrations.map((reg, regIndex) => (
+                    <div key={regIndex} style={{
+                      backgroundColor: '#f9f9f9',
+                      padding: '20px',
+                      borderRadius: '8px',
+                      marginBottom: '15px',
+                      border: '1px solid #e0e0e0'
+                    }}>
+                      <div style={{ 
+                        marginBottom: '15px', 
+                        paddingBottom: '10px', 
+                        borderBottom: '2px solid #E6B325',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center'
+                      }}>
+                        <div>
+                          <span style={{ fontWeight: 'bold', color: '#0B1C3F' }}>
+                            {t.familyGotram}: 
+                          </span>
+                          <span style={{ marginLeft: '10px', color: '#666' }}>
+                            {reg.familyGotram || 'Not specified'}
+                          </span>
+                        </div>
+                        <div style={{ fontSize: '12px', color: '#999' }}>
+                          {t.registeredOn}: {new Date(reg.createdAt).toLocaleDateString('en-US', { 
+                            month: 'short', 
+                            day: 'numeric', 
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </div>
+                      </div>
+                      
+                      {reg.members && reg.members.map((member, memberIndex) => (
+                        <div key={memberIndex} style={{
+                          backgroundColor: 'white',
+                          padding: '15px',
+                          borderRadius: '6px',
+                          marginBottom: '10px',
+                          border: '1px solid #ddd'
+                        }}>
+                          <div style={{ 
+                            display: 'grid', 
+                            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                            gap: '10px',
+                            fontSize: '13px'
+                          }}>
+                            <div>
+                              <strong>Name:</strong> {member.name} {member.surname}
+                            </div>
+                            <div>
+                              <strong>{t.relation}:</strong> {member.relation}
+                            </div>
+                            <div>
+                              <strong>{t.rasi}:</strong> {member.rasi || 'N/A'}
+                            </div>
+                            <div>
+                              <strong>{t.nakshatra}:</strong> {member.nakshatra || 'N/A'}
+                            </div>
+                            <div>
+                              <strong>{t.phone}:</strong> {member.phoneNo}
+                            </div>
+                            <div>
+                              <strong>{t.email}:</strong> {member.email}
+                            </div>
+                            {member.address && (
+                              <div style={{ gridColumn: '1 / -1' }}>
+                                <strong>{t.address}:</strong> {member.address}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              )}
+              
+              <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+                {selectedEventRegistrations.registrations.length > 0 && (
+                  <button
+                    onClick={exportToCSV}
+                    style={{
+                      padding: '10px 20px',
+                      backgroundColor: '#4caf50',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontWeight: '500',
+                      transition: 'all 0.3s ease',
+                      fontSize: '14px'
+                    }}
+                    onMouseEnter={e => e.target.style.opacity = '0.9'}
+                    onMouseLeave={e => e.target.style.opacity = '1'}
+                  >
+                    📥 {t.exportToCSV}
+                  </button>
+                )}
+                <button
+                  onClick={() => setShowRegistrationsModal(false)}
+                  style={{
+                    padding: '10px 20px',
+                    backgroundColor: '#f5f5f5',
+                    color: '#333',
+                    border: '1px solid #ddd',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    fontWeight: '500',
+                    transition: 'all 0.3s ease',
+                    fontSize: '14px'
+                  }}
+                  onMouseEnter={e => e.target.style.backgroundColor = '#e8e8e8'}
+                  onMouseLeave={e => e.target.style.backgroundColor = '#f5f5f5'}
+                >
+                  {t.close}
                 </button>
               </div>
             </div>

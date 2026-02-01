@@ -254,6 +254,32 @@ export default function AdminHome() {
             <p style={{ color: '#7f8c8d', fontSize: '0.9rem' }}>Manage board members</p>
           </div>
 
+          {/* Donors Admin */}
+          <div style={{
+            background: 'white',
+            border: '1px solid #ecf0f1',
+            borderRadius: '8px',
+            padding: '2rem',
+            textAlign: 'center',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+            cursor: 'pointer',
+            transition: 'transform 0.3s, boxShadow 0.3s'
+          }}
+          onMouseOver={(e) => {
+            e.currentTarget.style.transform = 'translateY(-5px)';
+            e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.15)';
+          }}
+          onMouseOut={(e) => {
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+          }}
+          onClick={() => navigate('/donors/admin')}
+          >
+            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>💝</div>
+            <h3 style={{ color: '#2c3e50', marginBottom: '0.5rem' }}>Donors</h3>
+            <p style={{ color: '#7f8c8d', fontSize: '0.9rem' }}>Manage donor records and donations</p>
+          </div>
+
           {/* Dashboard Admin */}
           <div style={{
             background: 'white',

@@ -1,116 +1,101 @@
 import { useState, useEffect } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
-import { getAllServices, addService, updateService, deleteService } from '../services/servicesData';
+import { 
+  getAllDailyPoojas, 
+  addPooja, 
+  updatePooja, 
+  deletePooja,
+  DAYS_OF_WEEK 
+} from '../services/dailyPoojasData';
 
 const translations = {
   en: {
-    services: 'Services',
-    addService: 'Add Service',
-    editService: 'Edit Service',
-    deleteService: 'Delete Service',
+    dailyPrayers: 'Daily Prayers',
+    addPooja: 'Add Prayer/Pooja',
+    editPooja: 'Edit Prayer/Pooja',
+    deletePooja: 'Delete Prayer/Pooja',
     save: 'Save',
     cancel: 'Cancel',
     delete: 'Delete',
     edit: 'Edit',
-    serviceName: 'Service Name',
+    poojaName: 'Prayer Name',
+    time: 'Time',
+    duration: 'Duration',
+    day: 'Day',
     description: 'Description',
-    price: 'Price',
+    deity: 'Deity',
     icon: 'Icon (Emoji)',
     details: 'Details (one per line)',
     loading: 'Loading...',
     error: 'Error',
     success: 'Success',
-    noServices: 'No services',
-    confirmDelete: 'Are you sure you want to delete this service?',
+    noPoojas: 'No prayers scheduled',
+    confirmDelete: 'Are you sure you want to delete this prayer?',
     accessDenied: 'Access Denied',
     adminOnly: 'Only admins can access this page',
-    backToServices: 'Back to Services',
+    backToPrayers: 'Back to Daily Prayers',
     detailsPlaceholder: 'Enter each detail on a new line'
   },
   te: {
-    services: 'సేవలు',
-    addService: 'సేవను జోడించండి',
-    editService: 'సేవను సవరించండి',
-    deleteService: 'సేవను తొలగించండి',
+    dailyPrayers: 'దైనిక ప్రార్థనలు',
+    addPooja: 'పూజ జోడించండి',
+    editPooja: 'పూజను సవరించండి',
+    deletePooja: 'పూజను తొలగించండి',
     save: 'సేవ్',
     cancel: 'రద్దు',
     delete: 'తొలగించండి',
-    edit: 'సవరించండి',
-    serviceName: 'సేవ పేరు',
-    description: 'వివరణ',
-    price: 'ధర',
-    icon: 'చిహ్నం (ఎమోజీ)',
-    details: 'వివరాలు (ప్రతి లైన్‌కు ఒకటి)',
-    loading: 'లోడ్ చేస్తోంది...',
-    error: 'లోపం',
-    success: 'విజయం',
-    noServices: 'సేవలు లేవు',
-    confirmDelete: 'మీరు ఈ సేవను తొలగించాలనుకుంటున్నారా?',
-    accessDenied: 'యాక్సెస్ నిరాకరించబడ్డారు',
-    adminOnly: 'ఈ పేజీకి ప్రవేశించడానికి పరిపాలకులు మాత్రమే',
-    backToServices: 'సేవలకు తిరిగి వెళ్లండి',
-    detailsPlaceholder: 'ప్రతి వివరాన్ని కొత్త లైన్‌లో నమోదు చేయండి'
+    edit: 'సవరించండి'
   },
   hi: {
-    services: 'सेवाएं',
-    addService: 'सेवा जोड़ें',
-    editService: 'सेवा संपादित करें',
-    deleteService: 'सेवा हटाएं',
+    dailyPrayers: 'दैनिक प्रार्थना',
+    addPooja: 'पूजा जोड़ें',
+    editPooja: 'पूजा संपादित करें',
+    deletePooja: 'पूजा हटाएं',
     save: 'सहेजें',
     cancel: 'रद्द करें',
     delete: 'हटाएं',
-    edit: 'संपादित करें',
-    serviceName: 'सेवा का नाम',
-    description: 'विवरण',
-    price: 'कीमत',
-    icon: 'आइकन (इमोजी)',
-    details: 'विवरण (प्रति पंक्ति एक)',
-    loading: 'लोड हो रहा है...',
-    error: 'त्रुटि',
-    success: 'सफलता',
-    noServices: 'कोई सेवा नहीं',
-    confirmDelete: 'क्या आप इस सेवा को हटाना चाहते हैं?',
-    accessDenied: 'एक्सेस नकारा गया',
-    adminOnly: 'केवल व्यवस्थापक इस पृष्ठ तक पहुंच सकते हैं',
-    backToServices: 'सेवाओं पर वापस जाएं',
-    detailsPlaceholder: 'प्रत्येक विवरण को नई पंक्ति में दर्ज करें'
+    edit: 'संपादित करें'
   }
 };
 
-export default function ServicesAdmin() {
+export default function DailyPrayersAdmin() {
   const { language } = useLanguage();
   const { user, isAuthenticated } = useAuth();
   const t = translations[language] || translations.en;
 
-  const [services, setServices] = useState([]);
+  const [poojas, setPoojas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
+    time: '09:00',
+    duration: '30 minutes',
+    day: 'Daily',
     description: '',
-    price: '',
+    deity: '',
     icon: '🙏',
     details: ''
   });
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
+  const [filterDay, setFilterDay] = useState('All');
 
   useEffect(() => {
     if (isAuthenticated && user?.role === 'admin') {
-      fetchServices();
+      fetchPoojas();
     } else {
       setLoading(false);
     }
   }, [isAuthenticated, user?.role]);
 
-  const fetchServices = () => {
+  const fetchPoojas = () => {
     try {
       setLoading(true);
-      const data = getAllServices();
-      setServices(data);
+      const data = getAllDailyPoojas();
+      setPoojas(data);
     } catch (err) {
-      console.error('Error loading services:', err);
+      console.error('Error loading poojas:', err);
     } finally {
       setLoading(false);
     }
@@ -124,38 +109,31 @@ export default function ServicesAdmin() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      // Convert details textarea to array
       const detailsArray = formData.details
         .split('\n')
         .map(d => d.trim())
         .filter(d => d);
 
-      const serviceData = {
+      const poojaData = {
         name: formData.name,
+        time: formData.time,
+        duration: formData.duration,
+        day: formData.day,
         description: formData.description,
-        price: formData.price,
+        deity: formData.deity,
         icon: formData.icon || '🙏',
         details: detailsArray
       };
 
-      console.log('editingId:', editingId);
-      console.log('serviceData:', serviceData);
-
       let result;
       if (editingId) {
-        console.log('Updating service with ID:', editingId);
-        result = updateService(editingId, serviceData);
-        console.log('Update result:', result);
+        result = updatePooja(editingId, poojaData);
       } else {
-        console.log('Adding new service');
-        result = addService(serviceData);
-        console.log('Add result:', result);
+        result = addPooja(poojaData);
       }
       
-      // Force immediate refresh with the returned result
-      const updatedServices = getAllServices();
-      console.log('Updated services after save:', updatedServices);
-      setServices(updatedServices);
+      const updatedPoojas = getAllDailyPoojas();
+      setPoojas(updatedPoojas);
       
       resetForm();
       alert(t.success);
@@ -165,33 +143,32 @@ export default function ServicesAdmin() {
     }
   };
 
-  const handleEdit = (service) => {
-    console.log('Editing service:', service); // Debug log
-    console.log('Service ID:', service.id, 'Type:', typeof service.id); // Check ID type
-    
-    if (!service.id) {
-      console.error('Service has no ID!', service);
-      alert('Error: Service has no ID. Cannot edit.');
+  const handleEdit = (pooja) => {
+    if (!pooja.id) {
+      console.error('Pooja has no ID!', pooja);
+      alert('Error: Pooja has no ID. Cannot edit.');
       return;
     }
     
-    const detailsString = Array.isArray(service.details) ? service.details.join('\n') : '';
-    setEditingId(service.id); // Set editingId FIRST
+    const detailsString = Array.isArray(pooja.details) ? pooja.details.join('\n') : '';
+    setEditingId(pooja.id);
     setFormData({
-      name: service.name || '',
-      description: service.description || '',
-      price: service.price || '',
-      icon: service.icon || '🙏',
+      name: pooja.name || '',
+      time: pooja.time || '09:00',
+      duration: pooja.duration || '30 minutes',
+      day: pooja.day || 'Daily',
+      description: pooja.description || '',
+      deity: pooja.deity || '',
+      icon: pooja.icon || '🙏',
       details: detailsString
     });
     setShowForm(true);
-    console.log('editingId set to:', service.id); // Debug log
   };
 
   const handleDelete = async (id) => {
     try {
-      deleteService(id);
-      fetchServices();
+      deletePooja(id);
+      fetchPoojas();
       setShowDeleteConfirm(null);
       alert(t.success);
     } catch (err) {
@@ -202,14 +179,29 @@ export default function ServicesAdmin() {
   const resetForm = () => {
     setFormData({
       name: '',
+      time: '09:00',
+      duration: '30 minutes',
+      day: 'Daily',
       description: '',
-      price: '',
+      deity: '',
       icon: '🙏',
       details: ''
     });
     setEditingId(null);
     setShowForm(false);
   };
+
+  // Filter poojas by day
+  const filteredPoojas = filterDay === 'All' 
+    ? poojas 
+    : poojas.filter(p => p.day === filterDay || p.day === 'Daily');
+
+  // Sort by time
+  const sortedPoojas = [...filteredPoojas].sort((a, b) => {
+    const timeA = a.time || '00:00';
+    const timeB = b.time || '00:00';
+    return timeA.localeCompare(timeB);
+  });
 
   if (loading) {
     return (
@@ -219,7 +211,6 @@ export default function ServicesAdmin() {
     );
   }
 
-  // Check admin access
   if (!isAuthenticated || user?.role !== 'admin') {
     return (
       <div style={{
@@ -233,7 +224,7 @@ export default function ServicesAdmin() {
       }}>
         <h2 style={{ color: '#d32f2f', marginBottom: '20px' }}>{t.accessDenied}</h2>
         <p style={{ color: '#666', marginBottom: '30px' }}>{t.adminOnly}</p>
-        <a href="/services" style={{
+        <a href="/daily-prayers" style={{
           display: 'inline-block',
           padding: '10px 20px',
           backgroundColor: '#0B1C3F',
@@ -242,7 +233,7 @@ export default function ServicesAdmin() {
           borderRadius: '4px',
           fontWeight: '500'
         }}>
-          {t.backToServices}
+          {t.backToPrayers}
         </a>
       </div>
     );
@@ -250,16 +241,18 @@ export default function ServicesAdmin() {
 
   return (
     <div style={{ padding: '40px 20px', minHeight: '70vh', backgroundColor: '#f9f9f9' }}>
-      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+      <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
         {/* Header */}
         <div style={{
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          marginBottom: '30px'
+          marginBottom: '30px',
+          flexWrap: 'wrap',
+          gap: '15px'
         }}>
           <h1 style={{ fontSize: '2rem', color: '#0B1C3F', margin: 0 }}>
-            {t.services} Management
+            🙏 {t.dailyPrayers} Management
           </h1>
           <button
             onClick={() => {
@@ -280,8 +273,69 @@ export default function ServicesAdmin() {
             onMouseEnter={e => e.target.style.opacity = '0.9'}
             onMouseLeave={e => e.target.style.opacity = '1'}
           >
-            + {t.addService}
+            + {t.addPooja}
           </button>
+        </div>
+
+        {/* Day Filter */}
+        <div style={{
+          backgroundColor: 'white',
+          padding: '20px',
+          borderRadius: '8px',
+          marginBottom: '20px',
+          boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+        }}>
+          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
+            <span style={{ fontWeight: '600', color: '#0B1C3F', marginRight: '10px' }}>Filter by Day:</span>
+            <button
+              onClick={() => setFilterDay('All')}
+              style={{
+                padding: '8px 16px',
+                backgroundColor: filterDay === 'All' ? '#0B1C3F' : '#f5f5f5',
+                color: filterDay === 'All' ? 'white' : '#333',
+                border: filterDay === 'All' ? 'none' : '1px solid #ddd',
+                borderRadius: '20px',
+                cursor: 'pointer',
+                fontSize: '13px',
+                fontWeight: '500'
+              }}
+            >
+              All Days
+            </button>
+            <button
+              onClick={() => setFilterDay('Daily')}
+              style={{
+                padding: '8px 16px',
+                backgroundColor: filterDay === 'Daily' ? '#E6B325' : '#f5f5f5',
+                color: filterDay === 'Daily' ? 'white' : '#333',
+                border: filterDay === 'Daily' ? 'none' : '1px solid #ddd',
+                borderRadius: '20px',
+                cursor: 'pointer',
+                fontSize: '13px',
+                fontWeight: '500'
+              }}
+            >
+              Daily
+            </button>
+            {DAYS_OF_WEEK.map(day => (
+              <button
+                key={day}
+                onClick={() => setFilterDay(day)}
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: filterDay === day ? '#E6B325' : '#f5f5f5',
+                  color: filterDay === day ? 'white' : '#333',
+                  border: filterDay === day ? 'none' : '1px solid #ddd',
+                  borderRadius: '20px',
+                  cursor: 'pointer',
+                  fontSize: '13px',
+                  fontWeight: '500'
+                }}
+              >
+                {day}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Form Modal */}
@@ -294,48 +348,113 @@ export default function ServicesAdmin() {
             boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
           }}>
             <h2 style={{ color: '#0B1C3F', marginBottom: '20px', marginTop: 0 }}>
-              {editingId ? t.editService : t.addService}
+              {editingId ? t.editPooja : t.addPooja}
             </h2>
 
             <form onSubmit={handleSubmit}>
-              <div style={{ marginBottom: '15px' }}>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>
-                  {t.serviceName}
-                </label>
-                <input
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  required
-                  style={{
-                    width: '100%',
-                    padding: '10px',
-                    border: '1px solid #ddd',
-                    borderRadius: '4px',
-                    fontSize: '14px',
-                    boxSizing: 'border-box'
-                  }}
-                />
-              </div>
-
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 1fr',
-                gap: '15px',
-                marginBottom: '15px'
-              }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '15px', marginBottom: '15px' }}>
                 <div>
                   <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>
-                    {t.price}
+                    {t.poojaName} *
                   </label>
                   <input
                     type="text"
-                    name="price"
-                    value={formData.price}
+                    name="name"
+                    value={formData.name}
                     onChange={handleInputChange}
                     required
-                    placeholder="₹500 or Free"
+                    placeholder="Morning Suprabhatam"
+                    style={{
+                      width: '100%',
+                      padding: '10px',
+                      border: '1px solid #ddd',
+                      borderRadius: '4px',
+                      fontSize: '14px',
+                      boxSizing: 'border-box'
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>
+                    {t.time} *
+                  </label>
+                  <input
+                    type="time"
+                    name="time"
+                    value={formData.time}
+                    onChange={handleInputChange}
+                    required
+                    style={{
+                      width: '100%',
+                      padding: '10px',
+                      border: '1px solid #ddd',
+                      borderRadius: '4px',
+                      fontSize: '14px',
+                      boxSizing: 'border-box'
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>
+                    {t.duration} *
+                  </label>
+                  <input
+                    type="text"
+                    name="duration"
+                    value={formData.duration}
+                    onChange={handleInputChange}
+                    required
+                    placeholder="30 minutes"
+                    style={{
+                      width: '100%',
+                      padding: '10px',
+                      border: '1px solid #ddd',
+                      borderRadius: '4px',
+                      fontSize: '14px',
+                      boxSizing: 'border-box'
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>
+                    {t.day} *
+                  </label>
+                  <select
+                    name="day"
+                    value={formData.day}
+                    onChange={handleInputChange}
+                    required
+                    style={{
+                      width: '100%',
+                      padding: '10px',
+                      border: '1px solid #ddd',
+                      borderRadius: '4px',
+                      fontSize: '14px',
+                      boxSizing: 'border-box'
+                    }}
+                  >
+                    <option value="Daily">Daily</option>
+                    {DAYS_OF_WEEK.map(day => (
+                      <option key={day} value={day}>{day}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '15px' }}>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>
+                    {t.deity}
+                  </label>
+                  <input
+                    type="text"
+                    name="deity"
+                    value={formData.deity}
+                    onChange={handleInputChange}
+                    placeholder="Lord Venkateswara"
                     style={{
                       width: '100%',
                       padding: '10px',
@@ -370,7 +489,7 @@ export default function ServicesAdmin() {
 
               <div style={{ marginBottom: '15px' }}>
                 <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>
-                  {t.description}
+                  {t.description} *
                 </label>
                 <textarea
                   name="description"
@@ -378,6 +497,7 @@ export default function ServicesAdmin() {
                   onChange={handleInputChange}
                   required
                   rows="3"
+                  placeholder="Describe the prayer/pooja..."
                   style={{
                     width: '100%',
                     padding: '10px',
@@ -453,25 +573,25 @@ export default function ServicesAdmin() {
           </div>
         )}
 
-        {/* Services List */}
-        {services.length === 0 ? (
+        {/* Poojas List */}
+        {sortedPoojas.length === 0 ? (
           <div style={{
             textAlign: 'center',
             padding: '40px 20px',
             backgroundColor: 'white',
             borderRadius: '8px'
           }}>
-            <p style={{ fontSize: '16px', color: '#999' }}>{t.noServices}</p>
+            <p style={{ fontSize: '16px', color: '#999' }}>{t.noPoojas}</p>
           </div>
         ) : (
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))',
-            gap: '25px'
+            gridTemplateColumns: 'repeat(auto-fill, minmax(400px, 1fr))',
+            gap: '20px'
           }}>
-            {services.map(service => (
+            {sortedPoojas.map(pooja => (
               <div
-                key={service.id}
+                key={pooja.id}
                 style={{
                   backgroundColor: 'white',
                   borderRadius: '8px',
@@ -482,33 +602,74 @@ export default function ServicesAdmin() {
               >
                 <div style={{
                   padding: '20px',
-                  background: 'linear-gradient(135deg, #0B1C3F 0%, #112A57 100%)',
+                  background: 'linear-gradient(135deg, #0B1C3F 0%, #1a3a6b 100%)',
                   color: 'white',
-                  textAlign: 'center'
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '15px'
                 }}>
-                  <div style={{ fontSize: '3rem', marginBottom: '10px' }}>
-                    {service.icon || '🙏'}
+                  <div style={{ fontSize: '3rem' }}>
+                    {pooja.icon || '🙏'}
                   </div>
-                  <h3 style={{ margin: '0' }}>{service.name}</h3>
+                  <div style={{ flex: 1 }}>
+                    <h3 style={{ margin: '0 0 5px 0', fontSize: '1.3rem' }}>{pooja.name}</h3>
+                    <div style={{ fontSize: '1.5rem', fontWeight: 'bold', fontFamily: 'monospace' }}>
+                      ⏰ {pooja.time}
+                    </div>
+                  </div>
                 </div>
 
                 <div style={{ padding: '20px' }}>
-                  <p style={{ margin: '0 0 10px 0', color: '#E6B325', fontSize: '18px', fontWeight: 'bold' }}>
-                    💰 {service.price}
-                  </p>
-                  <p style={{ margin: '0 0 15px 0', color: '#666', fontSize: '14px', lineHeight: '1.4' }}>
-                    {service.description}
+                  <div style={{ display: 'flex', gap: '10px', marginBottom: '15px', flexWrap: 'wrap' }}>
+                    <span style={{
+                      padding: '5px 12px',
+                      backgroundColor: '#E6B325',
+                      color: 'white',
+                      borderRadius: '15px',
+                      fontSize: '12px',
+                      fontWeight: '600'
+                    }}>
+                      {pooja.day}
+                    </span>
+                    <span style={{
+                      padding: '5px 12px',
+                      backgroundColor: '#f0f0f0',
+                      color: '#333',
+                      borderRadius: '15px',
+                      fontSize: '12px',
+                      fontWeight: '600'
+                    }}>
+                      ⏱️ {pooja.duration}
+                    </span>
+                    {pooja.deity && (
+                      <span style={{
+                        padding: '5px 12px',
+                        backgroundColor: '#fff3e0',
+                        color: '#e65100',
+                        borderRadius: '15px',
+                        fontSize: '12px',
+                        fontWeight: '600'
+                      }}>
+                        🕉️ {pooja.deity}
+                      </span>
+                    )}
+                  </div>
+
+                  <p style={{ margin: '0 0 15px 0', color: '#666', fontSize: '14px', lineHeight: '1.5' }}>
+                    {pooja.description}
                   </p>
                   
-                  {service.details && service.details.length > 0 && (
+                  {pooja.details && pooja.details.length > 0 && (
                     <div style={{
                       backgroundColor: '#f8f9fa',
-                      padding: '10px',
+                      padding: '12px',
                       borderRadius: '4px',
-                      marginBottom: '15px'
+                      marginBottom: '15px',
+                      maxHeight: '100px',
+                      overflowY: 'auto'
                     }}>
-                      <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '13px' }}>
-                        {service.details.map((detail, idx) => (
+                      <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '12px' }}>
+                        {pooja.details.map((detail, idx) => (
                           <li key={idx} style={{ marginBottom: '5px', color: '#555' }}>
                             {detail}
                           </li>
@@ -519,7 +680,7 @@ export default function ServicesAdmin() {
 
                   <div style={{ display: 'flex', gap: '10px' }}>
                     <button
-                      onClick={() => handleEdit(service)}
+                      onClick={() => handleEdit(pooja)}
                       style={{
                         flex: 1,
                         padding: '10px',
@@ -538,7 +699,7 @@ export default function ServicesAdmin() {
                       {t.edit}
                     </button>
                     <button
-                      onClick={() => setShowDeleteConfirm(service.id)}
+                      onClick={() => setShowDeleteConfirm(pooja.id)}
                       style={{
                         flex: 1,
                         padding: '10px',
@@ -586,7 +747,7 @@ export default function ServicesAdmin() {
               textAlign: 'center'
             }}>
               <h3 style={{ color: '#0B1C3F', marginBottom: '15px', marginTop: 0 }}>
-                {t.deleteService}
+                {t.deletePooja}
               </h3>
               <p style={{ color: '#666', marginBottom: '25px' }}>
                 {t.confirmDelete}

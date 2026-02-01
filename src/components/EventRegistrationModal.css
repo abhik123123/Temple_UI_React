@@ -27,7 +27,7 @@
 .event-registration-modal {
   background: white;
   border-radius: 12px;
-  max-width: 600px;
+  max-width: 700px;
   width: 100%;
   max-height: 90vh;
   overflow-y: auto;
@@ -97,6 +97,40 @@
   font-size: 0.9rem;
 }
 
+/* Gotram Section Styles */
+.gotram-section {
+  background: #fff8e1;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  border: 2px solid #E6B325;
+}
+
+.gotram-label {
+  display: block;
+  color: #8b4513;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  font-size: 1rem;
+}
+
+.gotram-input {
+  width: 100%;
+  padding: 0.75rem;
+  border-radius: 6px;
+  border: 1px solid #E6B325;
+  font-family: inherit;
+  font-size: 0.95rem;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+
+.gotram-input:focus {
+  outline: none;
+  border-color: #d4a017;
+  box-shadow: 0 0 0 3px rgba(230, 179, 37, 0.15);
+}
+
 .success-message {
   background: #c8e6c9;
   border: 1px solid #4caf50;
@@ -129,17 +163,20 @@
 
 .member-card {
   background: #fafafa;
-  padding: 1rem;
+  padding: 1.25rem;
   border-radius: 8px;
   margin-bottom: 1rem;
   border: 1px solid #e0e0e0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .member-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 0.75rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #e0e0e0;
 }
 
 .member-number {
@@ -152,11 +189,12 @@
   background: #d32f2f;
   color: white;
   border: none;
-  padding: 0.25rem 0.75rem;
+  padding: 0.4rem 1rem;
   border-radius: 4px;
   cursor: pointer;
   font-size: 0.85rem;
   transition: background 0.2s;
+  font-weight: 500;
 }
 
 .remove-member-btn:hover {
@@ -180,9 +218,10 @@
   border: 1px solid #ddd;
   font-family: inherit;
   font-size: 0.95rem;
-  transition: border-color 0.2s;
+  transition: border-color 0.2s, box-shadow 0.2s;
   width: 100%;
   box-sizing: border-box;
+  background: white;
 }
 
 .form-input:focus {
@@ -191,38 +230,59 @@
   box-shadow: 0 0 0 3px rgba(230, 179, 37, 0.1);
 }
 
+.form-input::placeholder {
+  color: #999;
+}
+
+/* Select Dropdown Styling */
+select.form-input {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23333' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 12px;
+  padding-right: 2.5rem;
+}
+
+select.form-input:focus {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23E6B325' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+}
+
 .add-member-btn {
   width: 100%;
-  padding: 0.75rem;
+  padding: 0.9rem;
   background: #e8f5e9;
   color: #2e7d32;
   border: 2px dashed #4caf50;
   border-radius: 6px;
   cursor: pointer;
   font-size: 0.95rem;
-  font-weight: 500;
+  font-weight: 600;
   transition: all 0.2s;
   margin-bottom: 1.5rem;
 }
 
 .add-member-btn:hover {
   background: #c8e6c9;
+  border-style: solid;
 }
 
 .form-actions {
   display: flex;
   gap: 1rem;
+  margin-top: 1.5rem;
 }
 
 .submit-btn {
   flex: 1;
-  padding: 0.75rem;
+  padding: 0.9rem;
   background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%);
   color: white;
   border: none;
   border-radius: 6px;
   cursor: pointer;
-  font-size: 0.95rem;
+  font-size: 1rem;
   font-weight: 600;
   transition: all 0.2s;
 }
@@ -239,13 +299,13 @@
 
 .cancel-btn {
   flex: 1;
-  padding: 0.75rem;
+  padding: 0.9rem;
   background: #f5f5f5;
   color: #333;
   border: 1px solid #ddd;
   border-radius: 6px;
   cursor: pointer;
-  font-size: 0.95rem;
+  font-size: 1rem;
   font-weight: 600;
   transition: all 0.2s;
 }
@@ -265,6 +325,7 @@
   .event-registration-modal {
     max-height: 95vh;
     padding: 1.5rem;
+    max-width: 95%;
   }
 
   .form-row {
@@ -282,6 +343,14 @@
   .submit-btn,
   .cancel-btn {
     width: 100%;
+  }
+
+  .member-card {
+    padding: 1rem;
+  }
+
+  .gotram-section {
+    padding: 0.75rem;
   }
 }
 

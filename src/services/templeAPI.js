@@ -109,13 +109,60 @@ const initializeDefaultData = () => {
   // Initialize Timings if empty
   if (!localStorage.getItem(STORAGE_KEYS.TIMINGS)) {
     const defaultTimings = [
-      { day: 'Monday', openTime: '06:00:00', closeTime: '20:00:00' },
-      { day: 'Tuesday', openTime: '06:00:00', closeTime: '20:00:00' },
-      { day: 'Wednesday', openTime: '06:00:00', closeTime: '20:00:00' },
-      { day: 'Thursday', openTime: '06:00:00', closeTime: '20:00:00' },
-      { day: 'Friday', openTime: '06:00:00', closeTime: '20:00:00' },
-      { day: 'Saturday', openTime: '06:00:00', closeTime: '21:00:00' },
-      { day: 'Sunday', openTime: '06:00:00', closeTime: '21:00:00' }
+      { 
+        day: 'Monday', 
+        notes: 'Multiple Sessions',
+        slots: [
+          { id: generateId(), openTime: '06:00:00', closeTime: '13:00:00' },
+          { id: generateId(), openTime: '16:00:00', closeTime: '21:00:00' }
+        ]
+      },
+      { 
+        day: 'Tuesday', 
+        notes: 'Regular Schedule',
+        slots: [
+          { id: generateId(), openTime: '06:00:00', closeTime: '13:00:00' },
+          { id: generateId(), openTime: '16:00:00', closeTime: '21:00:00' }
+        ]
+      },
+      { 
+        day: 'Wednesday', 
+        notes: 'Regular Schedule',
+        slots: [
+          { id: generateId(), openTime: '06:00:00', closeTime: '13:00:00' },
+          { id: generateId(), openTime: '16:00:00', closeTime: '21:00:00' }
+        ]
+      },
+      { 
+        day: 'Thursday', 
+        notes: 'Regular Schedule',
+        slots: [
+          { id: generateId(), openTime: '06:00:00', closeTime: '13:00:00' },
+          { id: generateId(), openTime: '16:00:00', closeTime: '21:00:00' }
+        ]
+      },
+      { 
+        day: 'Friday', 
+        notes: 'Regular Schedule',
+        slots: [
+          { id: generateId(), openTime: '06:00:00', closeTime: '13:00:00' },
+          { id: generateId(), openTime: '16:00:00', closeTime: '21:00:00' }
+        ]
+      },
+      { 
+        day: 'Saturday', 
+        notes: 'Extended Hours',
+        slots: [
+          { id: generateId(), openTime: '06:00:00', closeTime: '21:00:00' }
+        ]
+      },
+      { 
+        day: 'Sunday', 
+        notes: 'Weekend Schedule',
+        slots: [
+          { id: generateId(), openTime: '07:00:00', closeTime: '21:00:00' }
+        ]
+      }
     ];
     saveToStorage(STORAGE_KEYS.TIMINGS, defaultTimings);
   }
@@ -160,13 +207,21 @@ export const eventsAPI = {
     let newEvent;
     if (eventData instanceof FormData) {
       // Extract data from FormData
-      const eventJson = eventData.get('event');
+      const eventBlob = eventData.get('event');
       const photoFile = eventData.get('photo');
       
-      newEvent = JSON.parse(eventJson);
+      // If event is a Blob, read it as text first
+      if (eventBlob instanceof Blob) {
+        const eventText = await eventBlob.text();
+        newEvent = JSON.parse(eventText);
+      } else if (typeof eventBlob === 'string') {
+        newEvent = JSON.parse(eventBlob);
+      } else {
+        newEvent = eventBlob;
+      }
       
       // Convert image to base64 for storage
-      if (photoFile) {
+      if (photoFile && photoFile instanceof File) {
         const base64 = await new Promise((resolve) => {
           const reader = new FileReader();
           reader.onloadend = () => resolve(reader.result);
@@ -200,12 +255,20 @@ export const eventsAPI = {
     
     let updatedEvent;
     if (eventData instanceof FormData) {
-      const eventJson = eventData.get('event');
+      const eventBlob = eventData.get('event');
       const photoFile = eventData.get('photo');
       
-      updatedEvent = JSON.parse(eventJson);
+      // If event is a Blob, read it as text first
+      if (eventBlob instanceof Blob) {
+        const eventText = await eventBlob.text();
+        updatedEvent = JSON.parse(eventText);
+      } else if (typeof eventBlob === 'string') {
+        updatedEvent = JSON.parse(eventBlob);
+      } else {
+        updatedEvent = eventBlob;
+      }
       
-      if (photoFile) {
+      if (photoFile && photoFile instanceof File) {
         const base64 = await new Promise((resolve) => {
           const reader = new FileReader();
           reader.onloadend = () => resolve(reader.result);

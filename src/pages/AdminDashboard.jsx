@@ -1,10 +1,11 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { eventsAPI, servicesAPI, staffAPI, timingsAPI, imagesAPI, donorsAPI } from '../services/templeAPI';
+import { getAllPoojaBooks, addPoojaBook, updatePoojaBook, deletePoojaBook } from '../services/poojaData';
 
 /**
  * AdminDashboard.jsx - Complete admin management interface
- * Tabs: Dashboard, Home Images, Events, Services, Staff, Timings, Donors
+ * Tabs: Dashboard, Home Images, Events, Services, Staff, Timings, Donors, Pooja Books
  * All CRUD operations with backend integration
  */
 export default function AdminDashboard() {
@@ -74,6 +75,22 @@ export default function AdminDashboard() {
   });
   const [timingsLoading, setTimingsLoading] = useState(true);
 
+  // ====== POOJA BOOKS STATES ======
+  const [poojaBooks, setPoojaBooks] = useState([]);
+  const [poojaBooksLoading, setPoojaBooksLoading] = useState(true);
+  const [newPoojaBook, setNewPoojaBook] = useState({
+    title: '',
+    category: 'general',
+    description: '',
+    details: '',
+    icon: '📚',
+    language: 'Sanskrit & English',
+    pages: 0,
+    level: 'beginner',
+    downloadable: true
+  });
+  const [editingPoojaBookId, setEditingPoojaBookId] = useState(null);
+
   // ====== FETCH DATA ON MOUNT ======
   useEffect(() => {
     fetchAllData();
@@ -104,6 +121,10 @@ export default function AdminDashboard() {
       // Fetch timings
       const timingsRes = await timingsAPI.getAll();
       setTimings(timingsRes.data || timings);
+
+      // Fetch pooja books
+      const booksData = getAllPoojaBooks();
+      setPoojaBooks(booksData);
     } catch (error) {
       console.error('Error fetching data:', error);
       setDonorsError('Failed to load data');
@@ -114,6 +135,7 @@ export default function AdminDashboard() {
       setStaffLoading(false);
       setImagesLoading(false);
       setTimingsLoading(false);
+      setPoojaBooksLoading(false);
     }
   };
 
@@ -177,6 +199,60 @@ export default function AdminDashboard() {
       setShowDeleteConfirm(null);
     } catch (err) {
       alert('Failed to delete staff: ' + (err.response?.data?.message || err.message));
+    }
+  };
+
+  const handleDeletePoojaBook = (bookId) => {
+    try {
+      deletePoojaBook(bookId);
+      setPoojaBooks(poojaBooks.filter(b => b.id !== bookId));
+      setShowDeleteConfirm(null);
+      alert('Pooja book deleted successfully!');
+    } catch (err) {
+      alert('Failed to delete pooja book: ' + err.message);
+    }
+  };
+
+  const handleAddPoojaBook = () => {
+    if (!newPoojaBook.title || !newPoojaBook.description) {
+      alert('Please fill in title and description');
+      return;
+    }
+    try {
+      const detailsArray = newPoojaBook.details
+        .split('\n')
+        .map(d => d.trim())
+        .filter(d => d);
+
+      const bookData = {
+        ...newPoojaBook,
+        details: detailsArray,
+        pages: parseInt(newPoojaBook.pages) || 0
+      };
+
+      if (editingPoojaBookId) {
+        updatePoojaBook(editingPoojaBookId, bookData);
+        setPoojaBooks(poojaBooks.map(b => b.id === editingPoojaBookId ? { ...bookData, id: editingPoojaBookId } : b));
+        setEditingPoojaBookId(null);
+      } else {
+        const newBook = addPoojaBook(bookData);
+        setPoojaBooks([...poojaBooks, newBook]);
+      }
+      
+      setNewPoojaBook({
+        title: '',
+        category: 'general',
+        description: '',
+        details: '',
+        icon: '📚',
+        language: 'Sanskrit & English',
+        pages: 0,
+        level: 'beginner',
+        downloadable: true
+      });
+      alert('Pooja book saved successfully!');
+    } catch (err) {
+      alert('Failed to save pooja book: ' + err.message);
     }
   };
 
@@ -351,6 +427,8 @@ export default function AdminDashboard() {
                     handleDeleteService(showDeleteConfirm.id);
                   } else if (showDeleteConfirm.type === 'staff') {
                     handleDeleteStaff(showDeleteConfirm.id);
+                  } else if (showDeleteConfirm.type === 'poojabook') {
+                    handleDeletePoojaBook(showDeleteConfirm.id);
                   }
                 }}
                 style={{
@@ -399,7 +477,8 @@ export default function AdminDashboard() {
           { id: 'services', label: '🙏 Services' },
           { id: 'staff', label: '👥 Staff' },
           { id: 'timings', label: '⏰ Timings' },
-          { id: 'donors', label: '💝 Donors' }
+          { id: 'donors', label: '💝 Donors' },
+          { id: 'poojabooks', label: '📚 Pooja Books' }
         ].map(tab => (
           <button
             key={tab.id}
