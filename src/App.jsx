@@ -4,7 +4,6 @@ import { AuthProvider } from './context/AuthContext';
 import { LanguageProvider } from './context/LanguageContext';
 import Navigation from './components/Navigation';
 import Footer from './components/Footer';
-import IndiaTime from './components/IndiaTime';
 import ProtectedRoute from './components/ProtectedRoute';
 import Login from './pages/Login';
 import UserHome from './pages/UserHome';
@@ -129,7 +128,6 @@ export default function App() {
     <BrowserRouter>
       <LanguageProvider>
         <AuthProvider>
-          <IndiaTime />
           <AppRoutes />
         </AuthProvider>
       </LanguageProvider>

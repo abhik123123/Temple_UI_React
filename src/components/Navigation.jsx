@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -8,8 +8,37 @@ export default function Navigation() {
   const { language, changeLanguage, t } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
+  const [time, setTime] = useState(new Date());
 
   const isAdminPage = location.pathname.includes('/admin') || location.pathname.includes('/home/admin');
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTime(new Date());
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
+
+  const getIndiaTime = () => {
+    const istTime = new Date(time.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
+    
+    const hours = String(istTime.getHours()).padStart(2, '0');
+    const minutes = String(istTime.getMinutes()).padStart(2, '0');
+    const seconds = String(istTime.getSeconds()).padStart(2, '0');
+    
+    const day = istTime.toLocaleDateString('en-US', { 
+      weekday: 'short',
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      timeZone: 'Asia/Kolkata'
+    });
+
+    return { time: `${hours}:${minutes}:${seconds}`, date: day };
+  };
+
+  const { time: currentTime, date: currentDate } = getIndiaTime();
 
   const handleLogout = () => {
     logout();
@@ -35,6 +64,20 @@ export default function Navigation() {
           {user?.role === 'admin' && !isAdminPage && <li><Link to="/admin/dashboard">⚙️ Admin Dashboard</Link></li>}
         </ul>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          {/* Time Display */}
+          <div style={{ 
+            display: 'flex', 
+            flexDirection: 'column',
+            alignItems: 'flex-end',
+            color: '#E6B325',
+            fontSize: '0.85rem',
+            borderRight: '2px solid rgba(230, 179, 37, 0.3)',
+            paddingRight: '1rem'
+          }}>
+            <span style={{ fontWeight: 'bold', letterSpacing: '0.5px' }}>{currentTime}</span>
+            <span style={{ opacity: 0.8, fontSize: '0.75rem' }}>{currentDate}</span>
+          </div>
+
           {/* Language Selector */}
           <select 
             value={language} 
