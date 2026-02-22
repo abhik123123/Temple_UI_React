@@ -15,7 +15,10 @@ export default function Footer() {
           marginBottom: '1.5rem'
         }}>
           <div style={{ flex: '1', minWidth: '250px' }}>
-            <h3 style={{ color: '#FFD700', marginBottom: '1rem', fontSize: '1.2rem' }}>🏛️ Raja Rajeshwara Devastanam</h3>
+            <h3 style={{ color: '#FFD700', marginBottom: '1rem', fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <img src="/images/temple-images/shiva-linga-logo.png" alt="Temple Logo" style={{ height: '30px', width: '30px', objectFit: 'cover', borderRadius: '4px' }} />
+              Raja Rajeshwara Devastanam
+            </h3>
             <p style={{ color: '#FFE4B5', lineHeight: '1.8' }}>
               A sacred temple dedicated to Lord Shiva, serving the community with devotion and tradition.
             </p>

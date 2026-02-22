@@ -352,55 +352,66 @@ export default function ServicesAdmin() {
         {/* Form Modal */}
         {showForm && (
           <div style={{
-            backgroundColor: 'white',
-            padding: '30px',
-            borderRadius: '8px',
-            marginBottom: '30px',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0,0,0,0.6)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 1000,
+            padding: '20px',
+            overflow: 'auto'
           }}>
-            <h2 style={{ color: '#0B1C3F', marginBottom: '20px', marginTop: 0 }}>
-              {editingId ? t.editService : t.addService}
-            </h2>
+            <div style={{
+              backgroundColor: 'white',
+              padding: '30px',
+              borderRadius: '12px',
+              maxWidth: '600px',
+              width: '100%',
+              maxHeight: '90vh',
+              overflowY: 'auto',
+              boxShadow: '0 10px 40px rgba(0,0,0,0.3)',
+              position: 'relative'
+            }}>
+              {/* Close button */}
+              <button
+                onClick={resetForm}
+                style={{
+                  position: 'absolute',
+                  top: '15px',
+                  right: '15px',
+                  background: 'none',
+                  border: 'none',
+                  fontSize: '24px',
+                  cursor: 'pointer',
+                  color: '#666',
+                  padding: '5px 10px',
+                  lineHeight: '1'
+                }}
+                onMouseEnter={e => e.target.style.color = '#000'}
+                onMouseLeave={e => e.target.style.color = '#666'}
+              >
+                ×
+              </button>
 
-            <form onSubmit={handleSubmit}>
-              <div style={{ marginBottom: '15px' }}>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>
-                  {t.serviceName}
-                </label>
-                <input
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  required
-                  style={{
-                    width: '100%',
-                    padding: '10px',
-                    border: '1px solid #ddd',
-                    borderRadius: '4px',
-                    fontSize: '14px',
-                    boxSizing: 'border-box'
-                  }}
-                />
-              </div>
+              <h2 style={{ color: '#0B1C3F', marginBottom: '20px', marginTop: 0 }}>
+                {editingId ? t.editService : t.addService}
+              </h2>
 
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 1fr',
-                gap: '15px',
-                marginBottom: '15px'
-              }}>
-                <div>
+              <form onSubmit={handleSubmit}>
+                <div style={{ marginBottom: '15px' }}>
                   <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>
-                    {t.price}
+                    {t.serviceName}
                   </label>
                   <input
                     type="text"
-                    name="price"
-                    value={formData.price}
+                    name="name"
+                    value={formData.name}
                     onChange={handleInputChange}
                     required
-                    placeholder="₹500 or Free"
                     style={{
                       width: '100%',
                       padding: '10px',
@@ -411,161 +422,190 @@ export default function ServicesAdmin() {
                     }}
                   />
                 </div>
-              </div>
 
-              {/* Image/Icon Upload Section */}
-              <div style={{ marginBottom: '15px' }}>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>
-                  {t.icon}
-                  <span style={{ fontSize: '12px', color: '#666', fontWeight: 'normal', marginLeft: '8px' }}>
-                    ({t.iconHelp})
-                  </span>
-                </label>
-                
-                {/* Image Preview */}
-                {imagePreview && (
-                  <div style={{ marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <div style={{
-                      width: '80px',
-                      height: '80px',
-                      border: '2px solid #ddd',
-                      borderRadius: '8px',
-                      overflow: 'hidden',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      backgroundColor: '#f5f5f5'
-                    }}>
-                      <img 
-                        src={imagePreview} 
-                        alt="Preview" 
-                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                      />
-                    </div>
-                    <button
-                      type="button"
-                      onClick={handleRemoveImage}
-                      style={{
-                        padding: '8px 16px',
-                        backgroundColor: '#d32f2f',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: 'pointer',
-                        fontSize: '13px',
-                        fontWeight: '500'
-                      }}
-                    >
-                      {t.removeImage}
-                    </button>
-                  </div>
-                )}
-
-                {/* File Upload */}
-                <div>
-                  <label style={{
-                    display: 'inline-block',
-                    padding: '10px 20px',
-                    backgroundColor: '#0B1C3F',
-                    color: 'white',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    fontSize: '14px',
-                    fontWeight: '500'
-                  }}>
-                    📤 {t.uploadImage}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 1fr',
+                  gap: '15px',
+                  marginBottom: '15px'
+                }}>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>
+                      {t.price}
+                    </label>
                     <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageUpload}
-                      style={{ display: 'none' }}
+                      type="text"
+                      name="price"
+                      value={formData.price}
+                      onChange={handleInputChange}
+                      required
+                      placeholder="₹500 or Free"
+                      style={{
+                        width: '100%',
+                        padding: '10px',
+                        border: '1px solid #ddd',
+                        borderRadius: '4px',
+                        fontSize: '14px',
+                        boxSizing: 'border-box'
+                      }}
                     />
-                  </label>
+                  </div>
                 </div>
-              </div>
 
-              <div style={{ marginBottom: '15px' }}>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>
-                  {t.description}
-                </label>
-                <textarea
-                  name="description"
-                  value={formData.description}
-                  onChange={handleInputChange}
-                  required
-                  rows="3"
-                  style={{
-                    width: '100%',
-                    padding: '10px',
-                    border: '1px solid #ddd',
-                    borderRadius: '4px',
-                    fontSize: '14px',
-                    boxSizing: 'border-box',
-                    fontFamily: 'inherit'
-                  }}
-                />
-              </div>
+                {/* Image/Icon Upload Section */}
+                <div style={{ marginBottom: '15px' }}>
+                  <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>
+                    {t.icon}
+                    <span style={{ fontSize: '12px', color: '#666', fontWeight: 'normal', marginLeft: '8px' }}>
+                      ({t.iconHelp})
+                    </span>
+                  </label>
+                  
+                  {/* Image Preview */}
+                  {imagePreview && (
+                    <div style={{ marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <div style={{
+                        width: '80px',
+                        height: '80px',
+                        border: '2px solid #ddd',
+                        borderRadius: '8px',
+                        overflow: 'hidden',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        backgroundColor: '#f5f5f5'
+                      }}>
+                        <img 
+                          src={imagePreview} 
+                          alt="Preview" 
+                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleRemoveImage}
+                        style={{
+                          padding: '8px 16px',
+                          backgroundColor: '#d32f2f',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          fontSize: '13px',
+                          fontWeight: '500'
+                        }}
+                      >
+                        {t.removeImage}
+                      </button>
+                    </div>
+                  )}
 
-              <div style={{ marginBottom: '20px' }}>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>
-                  {t.details}
-                </label>
-                <textarea
-                  name="details"
-                  value={formData.details}
-                  onChange={handleInputChange}
-                  rows="5"
-                  placeholder={t.detailsPlaceholder}
-                  style={{
-                    width: '100%',
-                    padding: '10px',
-                    border: '1px solid #ddd',
-                    borderRadius: '4px',
-                    fontSize: '14px',
-                    boxSizing: 'border-box',
-                    fontFamily: 'inherit'
-                  }}
-                />
-              </div>
+                  {/* File Upload */}
+                  <div>
+                    <label style={{
+                      display: 'inline-block',
+                      padding: '10px 20px',
+                      backgroundColor: '#0B1C3F',
+                      color: 'white',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      fontWeight: '500'
+                    }}>
+                      📤 {t.uploadImage}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        style={{ display: 'none' }}
+                      />
+                    </label>
+                  </div>
+                </div>
 
-              <div style={{ display: 'flex', gap: '10px' }}>
-                <button
-                  type="submit"
-                  style={{
-                    padding: '12px 24px',
-                    backgroundColor: '#0B1C3F',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    fontWeight: '500',
-                    transition: 'all 0.3s ease'
-                  }}
-                  onMouseEnter={e => e.target.style.opacity = '0.9'}
-                  onMouseLeave={e => e.target.style.opacity = '1'}
-                >
-                  {t.save}
-                </button>
-                <button
-                  type="button"
-                  onClick={resetForm}
-                  style={{
-                    padding: '12px 24px',
-                    backgroundColor: '#f5f5f5',
-                    color: '#333',
-                    border: '1px solid #ddd',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    fontWeight: '500',
-                    transition: 'all 0.3s ease'
-                  }}
-                  onMouseEnter={e => e.target.style.backgroundColor = '#e8e8e8'}
-                  onMouseLeave={e => e.target.style.backgroundColor = '#f5f5f5'}
-                >
-                  {t.cancel}
-                </button>
-              </div>
-            </form>
+                <div style={{ marginBottom: '15px' }}>
+                  <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>
+                    {t.description}
+                  </label>
+                  <textarea
+                    name="description"
+                    value={formData.description}
+                    onChange={handleInputChange}
+                    required
+                    rows="3"
+                    style={{
+                      width: '100%',
+                      padding: '10px',
+                      border: '1px solid #ddd',
+                      borderRadius: '4px',
+                      fontSize: '14px',
+                      boxSizing: 'border-box',
+                      fontFamily: 'inherit'
+                    }}
+                  />
+                </div>
+
+                <div style={{ marginBottom: '20px' }}>
+                  <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>
+                    {t.details}
+                  </label>
+                  <textarea
+                    name="details"
+                    value={formData.details}
+                    onChange={handleInputChange}
+                    rows="5"
+                    placeholder={t.detailsPlaceholder}
+                    style={{
+                      width: '100%',
+                      padding: '10px',
+                      border: '1px solid #ddd',
+                      borderRadius: '4px',
+                      fontSize: '14px',
+                      boxSizing: 'border-box',
+                      fontFamily: 'inherit'
+                    }}
+                  />
+                </div>
+
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <button
+                    type="submit"
+                    style={{
+                      padding: '12px 24px',
+                      backgroundColor: '#0B1C3F',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontWeight: '500',
+                      transition: 'all 0.3s ease'
+                    }}
+                    onMouseEnter={e => e.target.style.opacity = '0.9'}
+                    onMouseLeave={e => e.target.style.opacity = '1'}
+                  >
+                    {t.save}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={resetForm}
+                    style={{
+                      padding: '12px 24px',
+                      backgroundColor: '#f5f5f5',
+                      color: '#333',
+                      border: '1px solid #ddd',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontWeight: '500',
+                      transition: 'all 0.3s ease'
+                    }}
+                    onMouseEnter={e => e.target.style.backgroundColor = '#e8e8e8'}
+                    onMouseLeave={e => e.target.style.backgroundColor = '#f5f5f5'}
+                  >
+                    {t.cancel}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         )}
 

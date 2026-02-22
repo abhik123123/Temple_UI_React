@@ -351,96 +351,66 @@ export default function StaffAdmin() {
         {/* Form Modal */}
         {showForm && (
           <div style={{
-            backgroundColor: 'white',
-            padding: '30px',
-            borderRadius: '8px',
-            marginBottom: '30px',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0,0,0,0.6)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 1000,
+            padding: '20px',
+            overflow: 'auto'
           }}>
-            <h2 style={{ color: '#0B1C3F', marginBottom: '20px', marginTop: 0 }}>
-              {editingId ? t.editStaff : t.addStaff}
-            </h2>
+            <div style={{
+              backgroundColor: 'white',
+              padding: '30px',
+              borderRadius: '12px',
+              maxWidth: '600px',
+              width: '100%',
+              maxHeight: '90vh',
+              overflowY: 'auto',
+              boxShadow: '0 10px 40px rgba(0,0,0,0.3)',
+              position: 'relative'
+            }}>
+              {/* Close button */}
+              <button
+                onClick={resetForm}
+                style={{
+                  position: 'absolute',
+                  top: '15px',
+                  right: '15px',
+                  background: 'none',
+                  border: 'none',
+                  fontSize: '24px',
+                  cursor: 'pointer',
+                  color: '#666',
+                  padding: '5px 10px',
+                  lineHeight: '1'
+                }}
+                onMouseEnter={e => e.target.style.color = '#000'}
+                onMouseLeave={e => e.target.style.color = '#666'}
+              >
+                ×
+              </button>
 
-            <form onSubmit={handleSubmit}>
-              <div style={{ marginBottom: '15px' }}>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>
-                  {t.fullName} *
-                </label>
-                <input
-                  type="text"
-                  name="fullName"
-                  value={formData.fullName}
-                  onChange={handleInputChange}
-                  required
-                  style={{
-                    width: '100%',
-                    padding: '10px',
-                    border: '1px solid #ddd',
-                    borderRadius: '4px',
-                    fontSize: '14px',
-                    boxSizing: 'border-box'
-                  }}
-                />
-              </div>
+              <h2 style={{ color: '#0B1C3F', marginBottom: '20px', marginTop: 0 }}>
+                {editingId ? t.editStaff : t.addStaff}
+              </h2>
 
-              <div style={{ marginBottom: '15px' }}>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>
-                  {t.role} *
-                </label>
-                <input
-                  type="text"
-                  name="role"
-                  value={formData.role}
-                  onChange={handleInputChange}
-                  required
-                  placeholder="e.g., Manager, Coordinator"
-                  style={{
-                    width: '100%',
-                    padding: '10px',
-                    border: '1px solid #ddd',
-                    borderRadius: '4px',
-                    fontSize: '14px',
-                    boxSizing: 'border-box'
-                  }}
-                />
-              </div>
-
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 1fr',
-                gap: '15px',
-                marginBottom: '15px'
-              }}>
-                <div>
+              <form onSubmit={handleSubmit}>
+                <div style={{ marginBottom: '15px' }}>
                   <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>
-                    {t.email}
+                    {t.fullName} *
                   </label>
                   <input
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    style={{
-                      width: '100%',
-                      padding: '10px',
-                      border: '1px solid #ddd',
-                      borderRadius: '4px',
-                      fontSize: '14px',
-                      boxSizing: 'border-box'
-                    }}
-                  />
-                </div>
-                <div>
-                  <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>
-                    {t.phone} *
-                  </label>
-                  <input
-                    type="tel"
-                    name="phone"
-                    value={formData.phone}
+                    type="text"
+                    name="fullName"
+                    value={formData.fullName}
                     onChange={handleInputChange}
                     required
-                    placeholder="9876543210"
                     style={{
                       width: '100%',
                       padding: '10px',
@@ -451,116 +421,186 @@ export default function StaffAdmin() {
                     }}
                   />
                 </div>
-              </div>
 
-              <div style={{ marginBottom: '15px' }}>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>
-                  Profile Image
-                </label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                  style={{
-                    width: '100%',
-                    padding: '10px',
-                    border: '1px solid #ddd',
-                    borderRadius: '4px',
-                    fontSize: '14px',
-                    boxSizing: 'border-box'
-                  }}
-                />
-                {imagePreview && (
-                  <div style={{ marginTop: '10px', textAlign: 'center' }}>
-                    <img
-                      src={imagePreview}
-                      alt="Profile Preview"
-                      style={{ maxWidth: '100%', maxHeight: '200px', borderRadius: '4px' }}
-                    />
-                    <button
-                      type="button"
-                      onClick={clearImage}
+                <div style={{ marginBottom: '15px' }}>
+                  <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>
+                    {t.role} *
+                  </label>
+                  <input
+                    type="text"
+                    name="role"
+                    value={formData.role}
+                    onChange={handleInputChange}
+                    required
+                    placeholder="e.g., Manager, Coordinator"
+                    style={{
+                      width: '100%',
+                      padding: '10px',
+                      border: '1px solid #ddd',
+                      borderRadius: '4px',
+                      fontSize: '14px',
+                      boxSizing: 'border-box'
+                    }}
+                  />
+                </div>
+
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 1fr',
+                  gap: '15px',
+                  marginBottom: '15px'
+                }}>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>
+                      {t.email}
+                    </label>
+                    <input
+                      type="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleInputChange}
                       style={{
-                        display: 'block',
-                        margin: '10px auto 0',
-                        padding: '8px 16px',
-                        backgroundColor: '#d32f2f',
-                        color: 'white',
-                        border: 'none',
+                        width: '100%',
+                        padding: '10px',
+                        border: '1px solid #ddd',
                         borderRadius: '4px',
-                        cursor: 'pointer',
-                        fontWeight: '500',
-                        transition: 'all 0.3s ease'
+                        fontSize: '14px',
+                        boxSizing: 'border-box'
                       }}
-                      onMouseEnter={e => e.target.style.opacity = '0.9'}
-                      onMouseLeave={e => e.target.style.opacity = '1'}
-                    >
-                      Remove Image
-                    </button>
+                    />
                   </div>
-                )}
-              </div>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>
+                      {t.phone} *
+                    </label>
+                    <input
+                      type="tel"
+                      name="phone"
+                      value={formData.phone}
+                      onChange={handleInputChange}
+                      required
+                      placeholder="9876543210"
+                      style={{
+                        width: '100%',
+                        padding: '10px',
+                        border: '1px solid #ddd',
+                        borderRadius: '4px',
+                        fontSize: '14px',
+                        boxSizing: 'border-box'
+                      }}
+                    />
+                  </div>
+                </div>
 
-              <div style={{ marginBottom: '20px' }}>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>
-                  {t.responsibilities}
-                </label>
-                <textarea
-                  name="responsibilities"
-                  value={formData.responsibilities}
-                  onChange={handleInputChange}
-                  rows="4"
-                  placeholder="Key responsibilities and duties (optional)..."
-                  style={{
-                    width: '100%',
-                    padding: '10px',
-                    border: '1px solid #ddd',
-                    borderRadius: '4px',
-                    fontSize: '14px',
-                    boxSizing: 'border-box',
-                    fontFamily: 'inherit'
-                  }}
-                />
-              </div>
+                <div style={{ marginBottom: '15px' }}>
+                  <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>
+                    Profile Image
+                  </label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    style={{
+                      width: '100%',
+                      padding: '10px',
+                      border: '1px solid #ddd',
+                      borderRadius: '4px',
+                      fontSize: '14px',
+                      boxSizing: 'border-box'
+                    }}
+                  />
+                  {imagePreview && (
+                    <div style={{ marginTop: '10px', textAlign: 'center' }}>
+                      <img
+                        src={imagePreview}
+                        alt="Profile Preview"
+                        style={{ maxWidth: '100%', maxHeight: '200px', borderRadius: '4px' }}
+                      />
+                      <button
+                        type="button"
+                        onClick={clearImage}
+                        style={{
+                          display: 'block',
+                          margin: '10px auto 0',
+                          padding: '8px 16px',
+                          backgroundColor: '#d32f2f',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          fontWeight: '500',
+                          transition: 'all 0.3s ease'
+                        }}
+                        onMouseEnter={e => e.target.style.opacity = '0.9'}
+                        onMouseLeave={e => e.target.style.opacity = '1'}
+                      >
+                        Remove Image
+                      </button>
+                    </div>
+                  )}
+                </div>
 
-              <div style={{ display: 'flex', gap: '10px' }}>
-                <button
-                  type="submit"
-                  style={{
-                    padding: '12px 24px',
-                    backgroundColor: '#0B1C3F',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    fontWeight: '500',
-                    transition: 'all 0.3s ease'
-                  }}
-                  onMouseEnter={e => e.target.style.opacity = '0.9'}
-                  onMouseLeave={e => e.target.style.opacity = '1'}
-                >
-                  {t.save}
-                </button>
-                <button
-                  type="button"
-                  onClick={resetForm}
-                  style={{
-                    padding: '12px 24px',
-                    backgroundColor: '#f5f5f5',
-                    color: '#333',
-                    border: '1px solid #ddd',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    fontWeight: '500',
-                    transition: 'all 0.3s ease'
-                  }}
-                  onMouseEnter={e => e.target.style.backgroundColor = '#e8e8e8'}
-                  onMouseLeave={e => e.target.style.backgroundColor = '#f5f5f5'}
-                >
-                  {t.cancel}
-                </button>
-              </div>
-            </form>
+                <div style={{ marginBottom: '20px' }}>
+                  <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>
+                    {t.responsibilities}
+                  </label>
+                  <textarea
+                    name="responsibilities"
+                    value={formData.responsibilities}
+                    onChange={handleInputChange}
+                    rows="4"
+                    placeholder="Key responsibilities and duties (optional)..."
+                    style={{
+                      width: '100%',
+                      padding: '10px',
+                      border: '1px solid #ddd',
+                      borderRadius: '4px',
+                      fontSize: '14px',
+                      boxSizing: 'border-box',
+                      fontFamily: 'inherit'
+                    }}
+                  />
+                </div>
+
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <button
+                    type="submit"
+                    style={{
+                      padding: '12px 24px',
+                      backgroundColor: '#0B1C3F',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontWeight: '500',
+                      transition: 'all 0.3s ease'
+                    }}
+                    onMouseEnter={e => e.target.style.opacity = '0.9'}
+                    onMouseLeave={e => e.target.style.opacity = '1'}
+                  >
+                    {t.save}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={resetForm}
+                    style={{
+                      padding: '12px 24px',
+                      backgroundColor: '#f5f5f5',
+                      color: '#333',
+                      border: '1px solid #ddd',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontWeight: '500',
+                      transition: 'all 0.3s ease'
+                    }}
+                    onMouseEnter={e => e.target.style.backgroundColor = '#e8e8e8'}
+                    onMouseLeave={e => e.target.style.backgroundColor = '#f5f5f5'}
+                  >
+                    {t.cancel}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         )}
 

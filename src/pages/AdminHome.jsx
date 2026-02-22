@@ -305,6 +305,58 @@ export default function AdminHome() {
             <h3 style={{ color: '#2c3e50', marginBottom: '0.5rem' }}>Daily Prayers</h3>
             <p style={{ color: '#7f8c8d', fontSize: '0.9rem' }}>Manage daily prayer schedules</p>
           </div>
+
+          {/* Gallery Admin */}
+          <div style={{
+            background: 'white',
+            border: '1px solid #ecf0f1',
+            borderRadius: '8px',
+            padding: '2rem',
+            textAlign: 'center',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+            cursor: 'pointer',
+            transition: 'transform 0.3s, boxShadow 0.3s'
+          }}
+          onMouseOver={(e) => {
+            e.currentTarget.style.transform = 'translateY(-5px)';
+            e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.15)';
+          }}
+          onMouseOut={(e) => {
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+          }}
+          onClick={() => navigate('/gallery/admin')}
+          >
+            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🖼️</div>
+            <h3 style={{ color: '#2c3e50', marginBottom: '0.5rem' }}>Gallery</h3>
+            <p style={{ color: '#7f8c8d', fontSize: '0.9rem' }}>Manage images, videos, and YouTube links</p>
+          </div>
+
+          {/* Website Views Analytics */}
+          <div style={{
+            background: 'white',
+            border: '1px solid #ecf0f1',
+            borderRadius: '8px',
+            padding: '2rem',
+            textAlign: 'center',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+            cursor: 'pointer',
+            transition: 'transform 0.3s, boxShadow 0.3s'
+          }}
+          onMouseOver={(e) => {
+            e.currentTarget.style.transform = 'translateY(-5px)';
+            e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.15)';
+          }}
+          onMouseOut={(e) => {
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+          }}
+          onClick={() => navigate('/analytics/admin')}
+          >
+            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📊</div>
+            <h3 style={{ color: '#2c3e50', marginBottom: '0.5rem' }}>Website Views</h3>
+            <p style={{ color: '#7f8c8d', fontSize: '0.9rem' }}>View website analytics and visitor statistics</p>
+          </div>
         </div>
       </div>
     </div>

@@ -10,7 +10,7 @@ import SubscribeNewsletter from '../components/SubscribeNewsletter';
  */
 export default function UserHome() {
   const navigate = useNavigate();
-  const { t } = useLanguage();
+  const { language } = useLanguage();
   const [aboutTab, setAboutTab] = useState('history');
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
@@ -37,7 +37,6 @@ export default function UserHome() {
   const aboutTabs = {
     history: 'Our temple has a rich history spanning centuries. We are dedicated to preserving traditions and serving the community with devotion and excellence.',
     community: 'We foster a vibrant community that celebrates cultural values, organizes spiritual programs, and supports the needs of our devotees.',
-    synagogue: 'Our sacred synagogue is an architectural marvel, built with intricate designs and spiritual significance. It remains a place of peace and meditation.',
     awards: 'Over the decades, our temple has received numerous accolades for its contributions to society and spiritual guidance.'
   };
 
@@ -52,6 +51,9 @@ export default function UserHome() {
         break;
       case 'Ceremonies':
         navigate('/services');
+        break;
+      case 'Gallery':
+        navigate('/gallery');
         break;
       default:
         // Other services don't have dedicated pages yet
@@ -88,7 +90,7 @@ export default function UserHome() {
         {/* Hero content */}
         <div style={{ position: 'relative', zIndex: 2, color: 'white', maxWidth: '600px' }}>
           <h1 style={{ fontSize: '3.5rem', fontWeight: 'bold', marginBottom: '1rem', textShadow: '2px 2px 4px rgba(0,0,0,0.8)' }}>
-            🏛️ Raja Rajeshwara Temple
+            Raja Rajeshwara Temple
           </h1>
           <p style={{ fontSize: '1.3rem', marginBottom: '2rem', fontStyle: 'italic', textShadow: '1px 1px 3px rgba(0,0,0,0.8)' }}>
             "ॐ नमः शिवाय"
@@ -185,7 +187,7 @@ export default function UserHome() {
         
         {/* Tab buttons */}
         <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
-          {['history', 'community', 'synagogue', 'awards'].map((tab) => (
+          {['history', 'community', 'awards'].map((tab) => (
             <button
               key={tab}
               onClick={() => setAboutTab(tab)}
@@ -246,7 +248,7 @@ export default function UserHome() {
             { icon: '🎉', title: 'Festivals', desc: 'Celebrate sacred occasions together' },
             { icon: '📚', title: 'Pooja Books', desc: 'Learn vedic knowledge and traditions' },
             { icon: '💒', title: 'Ceremonies', desc: 'Weddings, birth rituals, and blessings' },
-            { icon: '🙏', title: 'Consultations', desc: 'Spiritual guidance from priests' },
+            { icon: '🖼️', title: 'Gallery', desc: 'View temple photos, videos, and YouTube content' },
             { icon: '💝', title: 'Community Service', desc: 'Feeding and helping the needy' }
           ].map((service, index) => (
             <div

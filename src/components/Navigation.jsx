@@ -48,7 +48,10 @@ export default function Navigation() {
   return (
     <nav>
       <div className="nav-container">
-        <Link to={isAdminPage ? "/home/admin" : "/home"} className="logo">🏛️ Raja Rajeshwara</Link>
+        <Link to={isAdminPage ? "/home/admin" : "/home"} className="logo" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <img src="/images/temple-images/shiva-linga-logo.png" alt="Temple Logo" style={{ height: '35px', width: '35px', objectFit: 'contain', borderRadius: '4px' }} />
+          <span style={{ fontSize: '1.1rem' }}>Raja Rajeshwara</span>
+        </Link>
         <ul>
           <li><Link to={isAdminPage ? "/home/admin" : "/home"}>{t('nav_home')}</Link></li>
           <li><Link to={isAdminPage ? "/events/admin" : "/events"}>{t('nav_events')}</Link></li>
@@ -56,6 +59,7 @@ export default function Navigation() {
           {/* Temporarily hidden features */}
           {/* <li><Link to={isAdminPage ? "/pooja-books/admin" : "/pooja-books"}>📚 Pooja Books</Link></li> */}
           {/* <li><Link to={isAdminPage ? "/bajanas/admin" : "/bajanas"}>🎵 Bajanas</Link></li> */}
+          <li><Link to={isAdminPage ? "/gallery/admin" : "/gallery"}>Gallery</Link></li>
           <li><Link to={isAdminPage ? "/staff/admin" : "/staff"}>Staff</Link></li>
           <li><Link to={isAdminPage ? "/timings/admin" : "/timings"}>{t('nav_timings')}</Link></li>
           <li><Link to={isAdminPage ? "/board-members/admin" : "/board-members"}>Board</Link></li>
@@ -96,7 +100,8 @@ export default function Navigation() {
             <option value="hi" style={{ color: '#333', background: '#fff' }}>हिंदी</option>
           </select>
 
-          {user && (
+          {/* Only show user info and logout on admin pages */}
+          {isAdminPage && user && (
             <>
               <span style={{ color: '#FFD700', fontSize: '0.9rem', fontWeight: '500' }}>
                 👤 {user.name || user.email}
@@ -127,14 +132,12 @@ export default function Navigation() {
               </button>
             </>
           )}
-          {requireAuth && !user && (
+          {/* Show login link only on admin pages when not authenticated */}
+          {isAdminPage && requireAuth && !user && (
             <Link to="/login" style={{ color: '#FFD700', textDecoration: 'none', fontWeight: 'bold', fontSize: '0.95rem' }}>
               Login
             </Link>
           )}
-          <span style={{ color: '#FFE4B5', fontSize: '0.8rem', opacity: 0.8, marginLeft: '1rem' }}>
-            Env: {requireAuth ? 'AUTH' : 'NO-AUTH'}
-          </span>
         </div>
       </div>
     </nav>

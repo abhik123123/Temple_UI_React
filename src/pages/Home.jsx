@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
+import { usePageTracking } from '../hooks/usePageTracking';
 
 export default function Home() {
+  // Track page view
+  usePageTracking('Home');
+  
   const navigate = useNavigate();
   const { t } = useLanguage();
   const [aboutTab, setAboutTab] = useState('history');

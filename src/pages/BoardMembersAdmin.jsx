@@ -1,7 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
-import { boardMembersAPI } from '../services/boardMembersAPI';
+import { 
+  getAllBoardMembers, 
+  addBoardMember, 
+  updateBoardMember, 
+  deleteBoardMember 
+} from '../services/boardMembersData';
 
 const translations = {
   en: {
@@ -84,30 +89,6 @@ const translations = {
   }
 };
 
-// Mock data
-const MOCK_MEMBERS = [
-  {
-    id: 1,
-    name: 'Rajesh Kumar',
-    position: 'President',
-    department: 'Leadership',
-    email: 'rajesh@temple.com',
-    phone: '9876543210',
-    experience: 20,
-    description: 'Senior board member with extensive experience'
-  },
-  {
-    id: 2,
-    name: 'Priya Singh',
-    position: 'Vice President',
-    department: 'Leadership',
-    email: 'priya@temple.com',
-    phone: '9876543211',
-    experience: 15,
-    description: 'Finance and administration expert'
-  }
-];
-
 export default function BoardMembersAdmin() {
   const { language } = useLanguage();
   const { user, isAuthenticated } = useAuth();
@@ -119,15 +100,16 @@ export default function BoardMembersAdmin() {
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState({
-    name: '',
+    fullName: '',
     position: '',
     department: '',
     email: '',
-    phone: '',
-    experience: '',
-    description: ''
+    phoneNumber: '',
+    biography: '',
+    profileImageUrl: ''
   });
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
+  const [imagePreview, setImagePreview] = useState('');
 
   useEffect(() => {
     if (isAuthenticated && user?.role === 'admin') {
@@ -137,20 +119,44 @@ export default function BoardMembersAdmin() {
     }
   }, [isAuthenticated, user?.role]);
 
-  const fetchMembers = async () => {
+  const fetchMembers = () => {
     try {
       setLoading(true);
-      const data = await boardMembersAPI.getAll();
-      const membersList = Array.isArray(data) ? data : data?.data || [];
-      setMembers(membersList);
+      const data = getAllBoardMembers();
+      setMembers(data);
       setError(null);
     } catch (err) {
-      console.warn('Backend not available, using mock data:', err.message);
-      setMembers(MOCK_MEMBERS);
-      setError(null);
+      console.error('Error loading board members:', err);
+      setMembers([]);
+      setError('Unable to load board members.');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        alert('Image size should be less than 5MB');
+        return;
+      }
+      if (!file.type.startsWith('image/')) {
+        alert('Please select an image file');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+        setFormData(prev => ({ ...prev, profileImageUrl: reader.result }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const clearImage = () => {
+    setImagePreview('');
+    setFormData(prev => ({ ...prev, profileImageUrl: '' }));
   };
 
   const handleInputChange = (e) => {
@@ -158,55 +164,62 @@ export default function BoardMembersAdmin() {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     try {
       if (editingId) {
-        await boardMembersAPI.update(editingId, formData);
+        updateBoardMember(editingId, formData);
+        alert(t.success + ': Member updated');
       } else {
-        await boardMembersAPI.create(formData);
+        addBoardMember(formData);
+        alert(t.success + ': Member added');
       }
       fetchMembers();
       resetForm();
     } catch (err) {
-      alert(err.response?.data?.message || t.error);
+      console.error('Error saving member:', err);
+      alert(t.error + ': ' + err.message);
     }
   };
 
   const handleEdit = (member) => {
     setFormData({
-      name: member.name || '',
+      fullName: member.fullName || '',
       position: member.position || '',
       department: member.department || '',
+      phoneNumber: member.phoneNumber || '',
       email: member.email || '',
-      phone: member.phone || '',
-      experience: member.experience || '',
-      description: member.description || ''
+      biography: member.biography || '',
+      profileImageUrl: member.profileImageUrl || ''
     });
+    setImagePreview(member.profileImageUrl || '');
     setEditingId(member.id);
     setShowForm(true);
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = (id) => {
     try {
-      await boardMembersAPI.delete(id);
+      deleteBoardMember(id);
       fetchMembers();
       setShowDeleteConfirm(null);
+      alert(t.success + ': Member deleted');
     } catch (err) {
-      alert(err.response?.data?.message || t.error);
+      console.error('Error deleting member:', err);
+      alert(t.error + ': ' + err.message);
     }
   };
 
   const resetForm = () => {
     setFormData({
-      name: '',
+      fullName: '',
       position: '',
       department: '',
+      phoneNumber: '',
       email: '',
-      phone: '',
-      experience: '',
-      description: ''
+      biography: '',
+      profileImageUrl: ''
     });
+    setImagePreview('');
     setEditingId(null);
     setShowForm(false);
   };
@@ -299,31 +312,64 @@ export default function BoardMembersAdmin() {
         {/* Form Modal */}
         {showForm && (
           <div style={{
-            backgroundColor: 'white',
-            padding: '30px',
-            borderRadius: '8px',
-            marginBottom: '30px',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0,0,0,0.6)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 1000,
+            padding: '20px',
+            overflow: 'auto'
           }}>
-            <h2 style={{ color: '#0B1C3F', marginBottom: '20px', marginTop: 0 }}>
-              {editingId ? t.editMember : t.addMember}
-            </h2>
+            <div style={{
+              backgroundColor: 'white',
+              padding: '30px',
+              borderRadius: '12px',
+              maxWidth: '600px',
+              width: '100%',
+              maxHeight: '90vh',
+              overflowY: 'auto',
+              boxShadow: '0 10px 40px rgba(0,0,0,0.3)',
+              position: 'relative'
+            }}>
+              {/* Close button */}
+              <button
+                onClick={resetForm}
+                style={{
+                  position: 'absolute',
+                  top: '15px',
+                  right: '15px',
+                  background: 'none',
+                  border: 'none',
+                  fontSize: '24px',
+                  cursor: 'pointer',
+                  color: '#666',
+                  padding: '5px 10px',
+                  lineHeight: '1'
+                }}
+                onMouseEnter={e => e.target.style.color = '#000'}
+                onMouseLeave={e => e.target.style.color = '#666'}
+              >
+                ×
+              </button>
 
-            <form onSubmit={handleSubmit}>
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 1fr',
-                gap: '15px',
-                marginBottom: '15px'
-              }}>
-                <div>
+              <h2 style={{ color: '#0B1C3F', marginBottom: '20px', marginTop: 0 }}>
+                {editingId ? t.editMember : t.addMember}
+              </h2>
+
+              <form onSubmit={handleSubmit}>
+                <div style={{ marginBottom: '15px' }}>
                   <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>
-                    {t.name}
+                    Full Name *
                   </label>
                   <input
                     type="text"
-                    name="name"
-                    value={formData.name}
+                    name="fullName"
+                    value={formData.fullName}
                     onChange={handleInputChange}
                     required
                     style={{
@@ -336,88 +382,114 @@ export default function BoardMembersAdmin() {
                     }}
                   />
                 </div>
-                <div>
-                  <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>
-                    {t.position}
-                  </label>
-                  <input
-                    type="text"
-                    name="position"
-                    value={formData.position}
-                    onChange={handleInputChange}
-                    style={{
-                      width: '100%',
-                      padding: '10px',
-                      border: '1px solid #ddd',
-                      borderRadius: '4px',
-                      fontSize: '14px',
-                      boxSizing: 'border-box'
-                    }}
-                  />
-                </div>
-              </div>
 
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 1fr',
-                gap: '15px',
-                marginBottom: '15px'
-              }}>
-                <div>
-                  <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>
-                    {t.department}
-                  </label>
-                  <input
-                    type="text"
-                    name="department"
-                    value={formData.department}
-                    onChange={handleInputChange}
-                    style={{
-                      width: '100%',
-                      padding: '10px',
-                      border: '1px solid #ddd',
-                      borderRadius: '4px',
-                      fontSize: '14px',
-                      boxSizing: 'border-box'
-                    }}
-                  />
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 1fr',
+                  gap: '15px',
+                  marginBottom: '15px'
+                }}>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>
+                      Position *
+                    </label>
+                    <input
+                      type="text"
+                      name="position"
+                      value={formData.position}
+                      onChange={handleInputChange}
+                      required
+                      placeholder="e.g., President, Vice President"
+                      style={{
+                        width: '100%',
+                        padding: '10px',
+                        border: '1px solid #ddd',
+                        borderRadius: '4px',
+                        fontSize: '14px',
+                        boxSizing: 'border-box'
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>
+                      Department *
+                    </label>
+                    <input
+                      type="text"
+                      name="department"
+                      value={formData.department}
+                      onChange={handleInputChange}
+                      required
+                      placeholder="e.g., Leadership, Finance"
+                      style={{
+                        width: '100%',
+                        padding: '10px',
+                        border: '1px solid #ddd',
+                        borderRadius: '4px',
+                        fontSize: '14px',
+                        boxSizing: 'border-box'
+                      }}
+                    />
+                  </div>
                 </div>
-                <div>
-                  <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>
-                    {t.experience}
-                  </label>
-                  <input
-                    type="number"
-                    name="experience"
-                    value={formData.experience}
-                    onChange={handleInputChange}
-                    style={{
-                      width: '100%',
-                      padding: '10px',
-                      border: '1px solid #ddd',
-                      borderRadius: '4px',
-                      fontSize: '14px',
-                      boxSizing: 'border-box'
-                    }}
-                  />
-                </div>
-              </div>
 
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 1fr',
-                gap: '15px',
-                marginBottom: '15px'
-              }}>
-                <div>
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 1fr',
+                  gap: '15px',
+                  marginBottom: '15px'
+                }}>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>
+                      Email *
+                    </label>
+                    <input
+                      type="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      required
+                      style={{
+                        width: '100%',
+                        padding: '10px',
+                        border: '1px solid #ddd',
+                        borderRadius: '4px',
+                        fontSize: '14px',
+                        boxSizing: 'border-box'
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>
+                      Phone Number *
+                    </label>
+                    <input
+                      type="tel"
+                      name="phoneNumber"
+                      value={formData.phoneNumber}
+                      onChange={handleInputChange}
+                      required
+                      placeholder="9876543210"
+                      style={{
+                        width: '100%',
+                        padding: '10px',
+                        border: '1px solid #ddd',
+                        borderRadius: '4px',
+                        fontSize: '14px',
+                        boxSizing: 'border-box'
+                      }}
+                    />
+                  </div>
+                </div>
+
+                <div style={{ marginBottom: '15px' }}>
                   <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>
-                    {t.email}
+                    Profile Image
                   </label>
                   <input
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
                     style={{
                       width: '100%',
                       padding: '10px',
@@ -427,87 +499,97 @@ export default function BoardMembersAdmin() {
                       boxSizing: 'border-box'
                     }}
                   />
+                  {imagePreview && (
+                    <div style={{ marginTop: '10px', textAlign: 'center' }}>
+                      <img
+                        src={imagePreview}
+                        alt="Preview"
+                        style={{ maxWidth: '100%', maxHeight: '200px', borderRadius: '4px' }}
+                      />
+                      <button
+                        type="button"
+                        onClick={clearImage}
+                        style={{
+                          display: 'block',
+                          margin: '10px auto 0',
+                          padding: '5px 10px',
+                          backgroundColor: '#d32f2f',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          fontSize: '12px',
+                          fontWeight: '500'
+                        }}
+                      >
+                        Remove Image
+                      </button>
+                    </div>
+                  )}
                 </div>
-                <div>
+
+                <div style={{ marginBottom: '20px' }}>
                   <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>
-                    {t.phone}
+                    Biography *
                   </label>
-                  <input
-                    type="tel"
-                    name="phone"
-                    value={formData.phone}
+                  <textarea
+                    name="biography"
+                    value={formData.biography}
                     onChange={handleInputChange}
+                    required
+                    rows="4"
+                    placeholder="Brief biography of the board member..."
                     style={{
                       width: '100%',
                       padding: '10px',
                       border: '1px solid #ddd',
                       borderRadius: '4px',
                       fontSize: '14px',
-                      boxSizing: 'border-box'
+                      boxSizing: 'border-box',
+                      fontFamily: 'inherit'
                     }}
                   />
                 </div>
-              </div>
 
-              <div style={{ marginBottom: '20px' }}>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>
-                  {t.description}
-                </label>
-                <textarea
-                  name="description"
-                  value={formData.description}
-                  onChange={handleInputChange}
-                  rows="4"
-                  style={{
-                    width: '100%',
-                    padding: '10px',
-                    border: '1px solid #ddd',
-                    borderRadius: '4px',
-                    fontSize: '14px',
-                    boxSizing: 'border-box',
-                    fontFamily: 'inherit'
-                  }}
-                />
-              </div>
-
-              <div style={{ display: 'flex', gap: '10px' }}>
-                <button
-                  type="submit"
-                  style={{
-                    padding: '12px 24px',
-                    backgroundColor: '#0B1C3F',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    fontWeight: '500',
-                    transition: 'all 0.3s ease'
-                  }}
-                  onMouseEnter={e => e.target.style.opacity = '0.9'}
-                  onMouseLeave={e => e.target.style.opacity = '1'}
-                >
-                  {t.save}
-                </button>
-                <button
-                  type="button"
-                  onClick={resetForm}
-                  style={{
-                    padding: '12px 24px',
-                    backgroundColor: '#f5f5f5',
-                    color: '#333',
-                    border: '1px solid #ddd',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    fontWeight: '500',
-                    transition: 'all 0.3s ease'
-                  }}
-                  onMouseEnter={e => e.target.style.backgroundColor = '#e8e8e8'}
-                  onMouseLeave={e => e.target.style.backgroundColor = '#f5f5f5'}
-                >
-                  {t.cancel}
-                </button>
-              </div>
-            </form>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <button
+                    type="submit"
+                    style={{
+                      padding: '12px 24px',
+                      backgroundColor: '#0B1C3F',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontWeight: '500',
+                      transition: 'all 0.3s ease'
+                    }}
+                    onMouseEnter={e => e.target.style.opacity = '0.9'}
+                    onMouseLeave={e => e.target.style.opacity = '1'}
+                  >
+                    {t.save}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={resetForm}
+                    style={{
+                      padding: '12px 24px',
+                      backgroundColor: '#f5f5f5',
+                      color: '#333',
+                      border: '1px solid #ddd',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontWeight: '500',
+                      transition: 'all 0.3s ease'
+                    }}
+                    onMouseEnter={e => e.target.style.backgroundColor = '#e8e8e8'}
+                    onMouseLeave={e => e.target.style.backgroundColor = '#f5f5f5'}
+                  >
+                    {t.cancel}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         )}
 
@@ -538,32 +620,57 @@ export default function BoardMembersAdmin() {
                   transition: 'transform 0.3s ease'
                 }}
               >
-                <div style={{
-                  padding: '20px',
-                  background: 'linear-gradient(135deg, #0B1C3F 0%, #112A57 100%)',
-                  color: 'white'
-                }}>
-                  <h3 style={{ margin: '0 0 5px 0' }}>{member.name}</h3>
-                  <p style={{ margin: 0, fontSize: '12px', opacity: 0.9 }}>
-                    {member.position}
-                  </p>
-                </div>
+                {/* Member Image */}
+                {member.profileImageUrl ? (
+                  <div style={{ 
+                    width: '100%', 
+                    height: '220px', 
+                    overflow: 'hidden',
+                    backgroundColor: '#f5e6d3'
+                  }}>
+                    <img 
+                      src={member.profileImageUrl} 
+                      alt={member.fullName}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover'
+                      }}
+                    />
+                  </div>
+                ) : (
+                  <div style={{
+                    width: '100%',
+                    height: '220px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '4rem',
+                    background: 'linear-gradient(135deg, #8b4513 0%, #a0522d 100%)',
+                    color: 'white'
+                  }}>
+                    👤
+                  </div>
+                )}
 
                 <div style={{ padding: '20px' }}>
-                  <p style={{ margin: '0 0 10px 0', color: '#666', fontSize: '14px' }}>
+                  <h3 style={{ margin: '0 0 5px 0', color: '#0B1C3F', fontSize: '1.3rem' }}>
+                    {member.fullName}
+                  </h3>
+                  <p style={{ margin: '0 0 5px 0', color: '#d4a574', fontWeight: 'bold', fontSize: '0.95rem' }}>
+                    {member.position}
+                  </p>
+                  <p style={{ margin: '0 0 10px 0', color: '#999', fontSize: '0.85rem' }}>
                     🏢 {member.department}
                   </p>
                   <p style={{ margin: '0 0 10px 0', color: '#666', fontSize: '14px' }}>
                     📧 {member.email}
                   </p>
-                  <p style={{ margin: '0 0 10px 0', color: '#666', fontSize: '14px' }}>
-                    📞 {member.phone}
-                  </p>
                   <p style={{ margin: '0 0 15px 0', color: '#666', fontSize: '14px' }}>
-                    ⭐ {member.experience} years experience
+                    📞 {member.phoneNumber}
                   </p>
                   <p style={{ margin: '0 0 20px 0', color: '#666', fontSize: '13px', lineHeight: '1.4' }}>
-                    {member.description?.substring(0, 100)}...
+                    {member.biography?.substring(0, 100)}{member.biography?.length > 100 ? '...' : ''}
                   </p>
 
                   <div style={{ display: 'flex', gap: '10px' }}>

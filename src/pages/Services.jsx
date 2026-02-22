@@ -2,8 +2,12 @@ import { useState, useEffect } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { getAllServices } from '../services/servicesData';
 import { useNavigate } from 'react-router-dom';
+import { usePageTracking } from '../hooks/usePageTracking';
 
 export default function Services() {
+  // Track page view
+  usePageTracking('Services');
+  
   const { t } = useLanguage();
   const [services, setServices] = useState([]);
   const [imageErrors, setImageErrors] = useState(new Set());
@@ -425,33 +429,6 @@ export default function Services() {
                     </div>
                   )}
 
-                  {/* Book Button */}
-                  <button
-                    style={{
-                      width: '100%',
-                      padding: '14px',
-                      background: 'linear-gradient(135deg, #0B1C3F 0%, #1a3a6b 100%)',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '8px',
-                      cursor: 'pointer',
-                      fontSize: '15px',
-                      fontWeight: '600',
-                      transition: 'all 0.3s ease',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.5px'
-                    }}
-                    onMouseEnter={e => {
-                      e.target.style.opacity = '0.9';
-                      e.target.style.transform = 'scale(1.02)';
-                    }}
-                    onMouseLeave={e => {
-                      e.target.style.opacity = '1';
-                      e.target.style.transform = 'scale(1)';
-                    }}
-                  >
-                    📅 Book Service
-                  </button>
                 </div>
               </div>
             ))}

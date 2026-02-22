@@ -21,12 +21,16 @@ import Timings from './pages/Timings';
 import TimingsAdmin from './pages/TimingsAdmin';
 import Donors from './pages/Donors';
 import BoardMembers from './pages/BoardMembers';
+import BoardMembersAdmin from './pages/BoardMembersAdmin';
 import Staff from './pages/Staff';
 import StaffAdmin from './pages/StaffAdmin';
 import SubscriptionAdmin from './components/SubscriptionAdmin';
 import DonorsAdmin from './pages/DonorsAdmin';
 import DailyPrayers from './pages/DailyPrayers';
 import DailyPrayersAdmin from './pages/DailyPrayersAdmin';
+import Gallery from './pages/Gallery';
+import GalleryAdmin from './pages/GalleryAdmin';
+import AnalyticsAdmin from './pages/AnalyticsAdmin';
 import './styles/App.css';
 
 function AppRoutes() {
@@ -49,6 +53,7 @@ function AppRoutes() {
         <Route path="/board-members" element={<BoardMembers />} />
         <Route path="/staff" element={<Staff />} />
         <Route path="/daily-prayers" element={<DailyPrayers />} />
+        <Route path="/gallery" element={<Gallery />} />
 
         {/* ADMIN ROUTES - Authentication and admin role required */}
         <Route path="/home/admin" element={
@@ -86,8 +91,12 @@ function AppRoutes() {
             <TimingsAdmin />
           </ProtectedRoute>
         } />
-        {/* Board Members - Integrated admin/user view, redirect admin route to main page */}
-        <Route path="/board-members/admin" element={<Navigate to="/board-members" replace />} />
+        {/* Board Members - Separate admin page */}
+        <Route path="/board-members/admin" element={
+          <ProtectedRoute requireAdmin>
+            <BoardMembersAdmin />
+          </ProtectedRoute>
+        } />
         <Route path="/staff/admin" element={
           <ProtectedRoute requireAdmin>
             <StaffAdmin />
@@ -106,6 +115,16 @@ function AppRoutes() {
         <Route path="/daily-prayers/admin" element={
           <ProtectedRoute requireAdmin>
             <DailyPrayersAdmin />
+          </ProtectedRoute>
+        } />
+        <Route path="/gallery/admin" element={
+          <ProtectedRoute requireAdmin>
+            <GalleryAdmin />
+          </ProtectedRoute>
+        } />
+        <Route path="/analytics/admin" element={
+          <ProtectedRoute requireAdmin>
+            <AnalyticsAdmin />
           </ProtectedRoute>
         } />
 

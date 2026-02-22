@@ -2,8 +2,12 @@ import { useState, useMemo, useEffect } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { eventsAPI } from '../services/templeAPI';
 import EventRegistrationModal from '../components/EventRegistrationModal';
+import { usePageTracking } from '../hooks/usePageTracking';
 
 export default function Events() {
+  // Track page view
+  usePageTracking('Events');
+  
   const { t } = useLanguage();
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
