@@ -1,5 +1,5 @@
 // Environment configuration - Matches Backend Authentication Strategy
-const ENV = process.env.REACT_APP_ENV || 'local';
+const ENV = process.env.REACT_APP_ENV || (process.env.NODE_ENV === 'production' ? 'production' : 'local');
 
 const config = {
   local: {
@@ -52,4 +52,5 @@ const config = {
   }
 };
 
-export default config[ENV];
+// Fallback to production config if ENV is not recognized
+export default config[ENV] || config['production'];
