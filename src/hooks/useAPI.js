@@ -164,9 +164,9 @@ export const useAllEvents = () => {
  * @returns {object} { calendarData, loading, error }
  */
 export const useTeluguCalendarToday = () => {
-  const [calendarData, setCalendarData] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('Telugu Calendar API not yet available');
+  const calendarData = null;
+  const loading = false;
+  const error = 'Telugu Calendar API not yet available';
 
   // TODO: Implement when backend provides /api/telugu-calendar/today endpoint
 

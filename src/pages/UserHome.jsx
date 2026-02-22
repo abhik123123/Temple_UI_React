@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useLanguage } from '../context/LanguageContext';
 import SubscribeNewsletter from '../components/SubscribeNewsletter';
 
 /**
@@ -10,7 +9,6 @@ import SubscribeNewsletter from '../components/SubscribeNewsletter';
  */
 export default function UserHome() {
   const navigate = useNavigate();
-  const { language } = useLanguage();
   const [aboutTab, setAboutTab] = useState('history');
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 

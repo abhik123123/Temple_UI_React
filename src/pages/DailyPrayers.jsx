@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { useLanguage } from '../context/LanguageContext';
 import { getAllDailyPoojas, getTodaysPoojas, getPoojasByDay, DAYS_OF_WEEK } from '../services/dailyPoojasData';
 import { usePageTracking } from '../hooks/usePageTracking';
 
@@ -7,7 +6,6 @@ export default function DailyPrayers() {
   // Track page view
   usePageTracking('Daily Prayers');
   
-  const { t } = useLanguage();
   const [poojas, setPoojas] = useState([]);
   const [selectedDay, setSelectedDay] = useState('Today');
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -21,8 +19,9 @@ export default function DailyPrayers() {
     return () => clearInterval(timer);
   }, []);
 
-  useEffect(() => {
+    useEffect(() => {
     loadPoojas();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedDay]);
 
   const loadPoojas = () => {

@@ -35,7 +35,7 @@ export function AuthProvider({ children }) {
     setLoading(true);
     try {
       const response = await authAPI.login({ username, password });
-      const { user: userData, token } = response.data;
+      const { user: userData } = response.data;
       
       setUser(userData);
       setIsAuthenticated(true);

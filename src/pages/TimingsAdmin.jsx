@@ -202,16 +202,6 @@ export default function TimingsAdmin() {
     setHasChanges(false);
   };
 
-  const formatTime = (value) => {
-    if (!value) return '';
-    const parts = value.split(':');
-    const hours = parseInt(parts[0]);
-    const minutes = parts[1] || '00';
-    const ampm = hours >= 12 ? 'PM' : 'AM';
-    const displayHour = hours % 12 || 12;
-    return `${displayHour}:${minutes} ${ampm}`;
-  };
-
   if (loading) {
     return (
       <div style={{ padding: '40px 20px', textAlign: 'center', minHeight: '60vh' }}>

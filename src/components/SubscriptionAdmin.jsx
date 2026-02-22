@@ -23,6 +23,7 @@ const SubscriptionAdmin = () => {
   // Load statistics and subscribers
   useEffect(() => {
     loadData();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage]);
 
   const loadData = async () => {

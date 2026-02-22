@@ -55,8 +55,6 @@ export default function Login() {
     }
   };
 
-  const isSubmitDisabled = requireAuth ? loading || !username.trim() || !password : loading;
-
   // Show a redirect message for non-auth environments
   if (!requireAuth && !location.state?.from) {
     return (

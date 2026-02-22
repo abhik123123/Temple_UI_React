@@ -13,7 +13,7 @@ export default function Donors() {
   const [filterYear, setFilterYear] = useState('');
   const [filterDate, setFilterDate] = useState('');
 
-  const displayDonors = backendDonors && backendDonors.length > 0 ? backendDonors : [];
+  const displayDonors = useMemo(() => backendDonors && backendDonors.length > 0 ? backendDonors : [], [backendDonors]);
 
   // Filter donors based on selected filters
   const filteredDonors = useMemo(() => {

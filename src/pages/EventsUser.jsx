@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useLanguage } from '../context/LanguageContext';
-import { useAuth } from '../context/AuthContext';
 import { eventsAPI } from '../services/templeAPI';
 import EventRegistrationModal from '../components/EventRegistrationModal';
 
@@ -122,7 +121,6 @@ const MOCK_EVENTS = [
 
 export default function EventsUser() {
   const { language } = useLanguage();
-  const { user } = useAuth();
   const t = translations[language] || translations.en;
 
   const [events, setEvents] = useState([]);
