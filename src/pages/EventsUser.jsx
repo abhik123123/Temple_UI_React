@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
-import { eventsAPI } from '../services/templeAPI';
+import { eventsAPI } from '../services/postgresAPI';
 import EventRegistrationModal from '../components/EventRegistrationModal';
 
 const translations = {
@@ -142,7 +142,7 @@ export default function EventsUser() {
     try {
       setLoading(true);
       const data = await eventsAPI.getAll();
-      setEvents(Array.isArray(data) ? data : data?.data || []);
+      setEvents(Array.isArray(data) ? data : []);
       setError(null);
     } catch (err) {
       // Use mock data if backend is not available

@@ -1,24 +1,25 @@
 import { useState, useEffect } from 'react';
 import { useLanguage } from '../context/LanguageContext';
-import { getAllBajanas } from '../services/bajanasData';
+import { bajanasAPI } from '../services/postgresAPI';
 
 export default function Bajanas() {
   const { t } = useLanguage();
   const [bajanas, setBajanas] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('all');
 
   useEffect(() => {
-    // Load only devotional bajanas from localStorage
-    const allBajanas = getAllBajanas();
-    const devotionalOnly = allBajanas.filter(bajana => bajana.category === 'devotional');
-    setBajanas(devotionalOnly);
+    bajanasAPI.getAll()
+      .then(data => setBajanas(data))
+      .catch(err => console.error('Failed to load bajanas:', err))
+      .finally(() => setLoading(false));
   }, []);
 
   const categories = ['all', 'shiva', 'krishna', 'devi', 'ganesha', 'vishnu', 'rama', 'hanuman'];
-  
-  const filteredBajanas = selectedCategory === 'all' 
-    ? bajanas 
-    : bajanas.filter(bajana => bajana.deity === selectedCategory);
+
+  const filteredBajanas = selectedCategory === 'all'
+    ? bajanas
+    : bajanas.filter(b => b.deity === selectedCategory);
 
   return (
     <div style={{ backgroundColor: '#f9fafb', minHeight: '100vh' }}>

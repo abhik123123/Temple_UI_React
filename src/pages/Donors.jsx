@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { useAPI } from '../hooks/useAPI';
-import { donorsAPI } from '../services/templeAPI';
+import { donorsAPI } from '../services/postgresAPI';
 
 export default function Donors() {
   const { t } = useLanguage();

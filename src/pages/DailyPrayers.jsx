@@ -1,23 +1,19 @@
 import { useState, useEffect } from 'react';
 import { useLanguage } from '../context/LanguageContext';
-import { getAllDailyPoojas, getTodaysPoojas, getPoojasByDay, DAYS_OF_WEEK } from '../services/dailyPoojasData';
+import { dailyPoojasAPI } from '../services/postgresAPI';
 import { usePageTracking } from '../hooks/usePageTracking';
 
+const DAYS_OF_WEEK = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
 export default function DailyPrayers() {
-  // Track page view
   usePageTracking('Daily Prayers');
-  
   const { t } = useLanguage();
   const [poojas, setPoojas] = useState([]);
   const [selectedDay, setSelectedDay] = useState('Today');
   const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
-    // Update current time every minute
-    const timer = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 60000);
-
+    const timer = setInterval(() => setCurrentTime(new Date()), 60000);
     return () => clearInterval(timer);
   }, []);
 
@@ -27,11 +23,18 @@ export default function DailyPrayers() {
 
   const loadPoojas = () => {
     if (selectedDay === 'Today') {
-      setPoojas(getTodaysPoojas());
+      const today = DAYS_OF_WEEK[new Date().getDay()];
+      dailyPoojasAPI.getByDay(today)
+        .then(data => setPoojas(data))
+        .catch(err => console.error('Failed to load poojas:', err));
     } else if (selectedDay === 'All') {
-      setPoojas(getAllDailyPoojas());
+      dailyPoojasAPI.getAll()
+        .then(data => setPoojas(data))
+        .catch(err => console.error('Failed to load poojas:', err));
     } else {
-      setPoojas(getPoojasByDay(selectedDay));
+      dailyPoojasAPI.getByDay(selectedDay)
+        .then(data => setPoojas(data))
+        .catch(err => console.error('Failed to load poojas:', err));
     }
   };
 

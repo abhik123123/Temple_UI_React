@@ -22,10 +22,38 @@ apiClient.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Add response interceptor to handle errors
+// Transform PostgreSQL response to match frontend format
+const transformMember = (member) => {
+  if (!member) return null;
+  
+  return {
+    id: member.id,
+    fullName: member.full_name || member.fullName,
+    position: member.position,
+    department: member.department,
+    email: member.email,
+    phoneNumber: member.phone_number || member.phoneNumber,
+    biography: member.biography,
+    profileImageUrl: member.profile_image_url || member.profileImageUrl,
+    createdAt: member.created_at || member.createdAt,
+    updatedAt: member.updated_at || member.updatedAt
+  };
+};
+
+// Add response interceptor to handle errors and transform data
 apiClient.interceptors.response.use(
   (response) => {
     console.log(`[API Response] ${response.status}`, response.data);
+    
+    // Transform PostgreSQL snake_case to camelCase
+    if (response.data) {
+      if (Array.isArray(response.data)) {
+        response.data = response.data.map(transformMember);
+      } else if (response.data.id) {
+        response.data = transformMember(response.data);
+      }
+    }
+    
     return response;
   },
   (error) => {

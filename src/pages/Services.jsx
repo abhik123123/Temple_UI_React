@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useLanguage } from '../context/LanguageContext';
-import { getAllServices } from '../services/servicesData';
+import { servicesAPI } from '../services/postgresAPI';
 import { useNavigate } from 'react-router-dom';
 import { usePageTracking } from '../hooks/usePageTracking';
 
@@ -10,12 +10,24 @@ export default function Services() {
   
   const { t } = useLanguage();
   const [services, setServices] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [imageErrors, setImageErrors] = useState(new Set());
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Load services from localStorage
-    setServices(getAllServices());
+    const fetchServices = async () => {
+      try {
+        setLoading(true);
+        const data = await servicesAPI.getAll();
+        setServices(Array.isArray(data) ? data : []);
+      } catch (err) {
+        console.error('Error loading services:', err);
+        setServices([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchServices();
   }, []);
 
   const handleImageError = (serviceId) => {

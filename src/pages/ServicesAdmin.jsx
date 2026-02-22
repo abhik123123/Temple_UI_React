@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
-import { getAllServices, addService, updateService, deleteService } from '../services/servicesData';
+import { servicesAPI } from '../services/postgresAPI';
 
 const translations = {
   en: {
@@ -111,13 +111,14 @@ export default function ServicesAdmin() {
     }
   }, [isAuthenticated, user?.role]);
 
-  const fetchServices = () => {
+  const fetchServices = async () => {
     try {
       setLoading(true);
-      const data = getAllServices();
-      setServices(data);
+      const data = await servicesAPI.getAll();
+      setServices(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('Error loading services:', err);
+      setServices([]);
     } finally {
       setLoading(false);
     }
@@ -149,7 +150,6 @@ export default function ServicesAdmin() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      // Convert details textarea to array
       const detailsArray = formData.details
         .split('\n')
         .map(d => d.trim())
@@ -160,53 +160,20 @@ export default function ServicesAdmin() {
         description: formData.description,
         price: formData.price,
         icon: formData.icon || '🙏',
-        details: detailsArray
+        details: detailsArray,
       };
 
-      // Check if editing and nothing has changed
-      if (editingId && originalData) {
-        const originalDetailsArray = originalData.details
-          .split('\n')
-          .map(d => d.trim())
-          .filter(d => d);
-        
-        const hasChanges = 
-          formData.name !== originalData.name ||
-          formData.description !== originalData.description ||
-          formData.price !== originalData.price ||
-          formData.icon !== originalData.icon ||
-          JSON.stringify(detailsArray) !== JSON.stringify(originalDetailsArray);
-
-        if (!hasChanges) {
-          alert('⚠️ No changes detected. Please modify the service details before saving.');
-          return;
-        }
-      }
-
-      console.log('editingId:', editingId);
-      console.log('serviceData:', serviceData);
-
-      let result;
       if (editingId) {
-        console.log('Updating service with ID:', editingId);
-        result = updateService(editingId, serviceData);
-        console.log('Update result:', result);
+        await servicesAPI.update(editingId, serviceData);
       } else {
-        console.log('Adding new service');
-        result = addService(serviceData);
-        console.log('Add result:', result);
+        await servicesAPI.create(serviceData);
       }
-      
-      // Force immediate refresh with the returned result
-      const updatedServices = getAllServices();
-      console.log('Updated services after save:', updatedServices);
-      setServices(updatedServices);
-      
+      await fetchServices();
       resetForm();
       alert(t.success);
     } catch (err) {
-      console.error('Error in handleSubmit:', err);
-      alert(t.error + ': ' + err.message);
+      console.error('Error saving service:', err);
+      alert(t.error + ': ' + (err.response?.data?.error || err.message));
     }
   };
 
@@ -249,12 +216,12 @@ export default function ServicesAdmin() {
 
   const handleDelete = async (id) => {
     try {
-      deleteService(id);
-      fetchServices();
+      await servicesAPI.delete(id);
+      await fetchServices();
       setShowDeleteConfirm(null);
       alert(t.success);
     } catch (err) {
-      alert(t.error + ': ' + err.message);
+      alert(t.error + ': ' + (err.response?.data?.error || err.message));
     }
   };
 

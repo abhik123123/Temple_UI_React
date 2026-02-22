@@ -1,40 +1,46 @@
 import { useState, useEffect } from 'react';
 import { useLanguage } from '../context/LanguageContext';
-import { getAllBajanas, addBajana, updateBajana, deleteBajana } from '../services/bajanasData';
+import { bajanasAPI } from '../services/postgresAPI';
+
+const BLANK_FORM = {
+  title: '', artist: '', category: 'devotional', deity: 'shiva',
+  schedule: '', description: '', details: '', icon: '🎵',
+  hasAudio: false, hasLyrics: false,
+};
 
 export default function BajanasAdmin() {
   const { t } = useLanguage();
   const [bajanas, setBajanas] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingBajana, setEditingBajana] = useState(null);
-  const [formData, setFormData] = useState({
-    title: '',
-    artist: '',
-    category: 'devotional',
-    deity: 'shiva',
-    schedule: '',
-    description: '',
-    details: '',
-    icon: '🎵',
-    hasAudio: false,
-    hasLyrics: false
-  });
+  const [formData, setFormData] = useState(BLANK_FORM);
 
   useEffect(() => {
     loadBajanas();
   }, []);
 
   const loadBajanas = () => {
-    setBajanas(getAllBajanas());
+    setLoading(true);
+    bajanasAPI.getAll()
+      .then(data => setBajanas(data))
+      .catch(err => console.error('Failed to load bajanas:', err))
+      .finally(() => setLoading(false));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      const payload = {
+        ...formData,
+        details: typeof formData.details === 'string'
+          ? formData.details.split(',').map(d => d.trim()).filter(Boolean)
+          : formData.details,
+      };
       if (editingBajana) {
-        updateBajana(editingBajana.id, formData);
+        await bajanasAPI.update(editingBajana.id, payload);
       } else {
-        addBajana(formData);
+        await bajanasAPI.create(payload);
       }
       loadBajanas();
       closeModal();
@@ -46,23 +52,15 @@ export default function BajanasAdmin() {
   const handleEdit = (bajana) => {
     setEditingBajana(bajana);
     setFormData({
-      title: bajana.title,
-      artist: bajana.artist || '',
-      category: bajana.category,
-      deity: bajana.deity || 'shiva',
-      schedule: bajana.schedule || '',
-      description: bajana.description,
+      ...bajana,
       details: Array.isArray(bajana.details) ? bajana.details.join(', ') : '',
-      icon: bajana.icon || '🎵',
-      hasAudio: bajana.hasAudio || false,
-      hasLyrics: bajana.hasLyrics || false
     });
     setIsModalOpen(true);
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this bajana?')) {
-      deleteBajana(id);
+      await bajanasAPI.delete(id);
       loadBajanas();
     }
   };
@@ -70,18 +68,7 @@ export default function BajanasAdmin() {
   const closeModal = () => {
     setIsModalOpen(false);
     setEditingBajana(null);
-    setFormData({
-      title: '',
-      artist: '',
-      category: 'devotional',
-      deity: 'shiva',
-      schedule: '',
-      description: '',
-      details: '',
-      icon: '🎵',
-      hasAudio: false,
-      hasLyrics: false
-    });
+    setFormData(BLANK_FORM);
   };
 
   return (

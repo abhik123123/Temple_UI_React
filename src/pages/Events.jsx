@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useLanguage } from '../context/LanguageContext';
-import { eventsAPI } from '../services/templeAPI';
+import { eventsAPI } from '../services/postgresAPI';
 import EventRegistrationModal from '../components/EventRegistrationModal';
 import { usePageTracking } from '../hooks/usePageTracking';
 
@@ -19,19 +19,17 @@ export default function Events() {
   const [filterYear, setFilterYear] = useState('');
   const [imageErrors, setImageErrors] = useState(new Set());
 
-  // Fetch events from localStorage
+  // Fetch events from API
   useEffect(() => {
     const fetchEvents = async () => {
       try {
         setLoading(true);
-        const response = await eventsAPI.getAll();
-        const eventsArray = Array.isArray(response.data) ? response.data : [];
-        console.log('[Events] Loaded events:', eventsArray);
-        setEvents(eventsArray);
+        const data = await eventsAPI.getAll();
+        setEvents(Array.isArray(data) ? data : []);
         setError(null);
       } catch (err) {
         console.error('[Events] Error loading events:', err);
-        setError('Failed to load events');
+        setError('Failed to load events. Is the backend running?');
       } finally {
         setLoading(false);
       }

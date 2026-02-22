@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
-import { donorsAPI } from '../services/templeAPI';
+import { donorsAPI } from '../services/postgresAPI';
 
 export default function DonorsAdmin() {
   const { language } = useLanguage();

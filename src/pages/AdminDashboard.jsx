@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { eventsAPI, servicesAPI, staffAPI, timingsAPI, imagesAPI, donorsAPI } from '../services/templeAPI';
+import { eventsAPI, servicesAPI, staffAPI, timingsAPI, donorsAPI } from '../services/postgresAPI';
 import { getAllPoojaBooks, addPoojaBook, updatePoojaBook, deletePoojaBook } from '../services/poojaData';
 
 /**
@@ -98,33 +98,25 @@ export default function AdminDashboard() {
 
   const fetchAllData = async () => {
     try {
-      // Fetch donors
-      const donorsRes = await donorsAPI.getAll();
-      setDonors(Array.isArray(donorsRes.data) ? donorsRes.data : donorsRes.data?.data || []);
-      
-      // Fetch events
-      const eventsRes = await eventsAPI.getAll();
-      setEventsLocal(Array.isArray(eventsRes.data) ? eventsRes.data : eventsRes.data?.data || []);
-      
-      // Fetch services
-      const servicesRes = await servicesAPI.getAll();
-      setServices(Array.isArray(servicesRes.data) ? servicesRes.data : servicesRes.data?.data || []);
-      
-      // Fetch staff
-      const staffRes = await staffAPI.getAll();
-      setStaff(Array.isArray(staffRes.data) ? staffRes.data : staffRes.data?.data || []);
-      
-      // Fetch images
-      const imagesRes = await imagesAPI.getAll();
-      setHomeImages(Array.isArray(imagesRes.data) ? imagesRes.data : imagesRes.data?.data || []);
-      
-      // Fetch timings
-      const timingsRes = await timingsAPI.getAll();
-      setTimings(timingsRes.data || timings);
+      // postgresAPI methods return data directly (already unwrapped)
+      const [donorsData, eventsData, servicesData, staffData, timingsData, booksData] = await Promise.allSettled([
+        donorsAPI.getAll(),
+        eventsAPI.getAll(),
+        servicesAPI.getAll(),
+        staffAPI.getAll(),
+        timingsAPI.getAll(),
+        Promise.resolve(getAllPoojaBooks()),
+      ]);
 
-      // Fetch pooja books
-      const booksData = getAllPoojaBooks();
-      setPoojaBooks(booksData);
+      if (donorsData.status === 'fulfilled') setDonors(Array.isArray(donorsData.value) ? donorsData.value : []);
+      if (eventsData.status === 'fulfilled') setEventsLocal(Array.isArray(eventsData.value) ? eventsData.value : []);
+      if (servicesData.status === 'fulfilled') setServices(Array.isArray(servicesData.value) ? servicesData.value : []);
+      if (staffData.status === 'fulfilled') setStaff(Array.isArray(staffData.value) ? staffData.value : []);
+      if (timingsData.status === 'fulfilled') {
+        const timingsArray = Array.isArray(timingsData.value) ? timingsData.value : [];
+        if (timingsArray.length > 0) setTimings(timingsArray);
+      }
+      if (booksData.status === 'fulfilled') setPoojaBooks(Array.isArray(booksData.value) ? booksData.value : []);
     } catch (error) {
       console.error('Error fetching data:', error);
       setDonorsError('Failed to load data');
@@ -172,14 +164,10 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleDeleteImage = async (imageId) => {
-    try {
-      await imagesAPI.delete(imageId);
-      setHomeImages(homeImages.filter(img => img.id !== imageId));
-      setShowDeleteConfirm(null);
-    } catch (err) {
-      alert('Failed to delete image: ' + (err.response?.data?.message || err.message));
-    }
+  const handleDeleteImage = async (imageIndex) => {
+    // Images managed via dedicated GalleryAdmin page
+    setHomeImages(homeImages.filter((_, i) => i !== imageIndex));
+    setShowDeleteConfirm(null);
   };
 
   const handleDeleteService = async (serviceId) => {
@@ -263,14 +251,15 @@ export default function AdminDashboard() {
     }
     try {
       if (editingEventId) {
-        await eventsAPI.update(editingEventId, newEvent);
-        setEventsLocal(events_local.map(e => e.id === editingEventId ? { ...newEvent, id: editingEventId } : e));
+        const updated = await eventsAPI.update(editingEventId, newEvent);
+        setEventsLocal(events_local.map(e => e.id === editingEventId ? { ...e, ...updated } : e));
         setEditingEventId(null);
       } else {
-        const res = await eventsAPI.create(newEvent);
-        setEventsLocal([...events_local, res.data]);
+        const created = await eventsAPI.create(newEvent);
+        setEventsLocal([...events_local, created]);
       }
       setNewEvent({ title: '', date: '', time: '', location: '', description: '' });
+      setEventImageFile(null);
     } catch (err) {
       alert('Failed to save event: ' + (err.response?.data?.message || err.message));
     }
@@ -283,14 +272,15 @@ export default function AdminDashboard() {
     }
     try {
       if (editingServiceId) {
-        await servicesAPI.update(editingServiceId, newService);
-        setServices(services.map(s => s.id === editingServiceId ? { ...newService, id: editingServiceId } : s));
+        const updated = await servicesAPI.update(editingServiceId, newService);
+        setServices(services.map(s => s.id === editingServiceId ? { ...s, ...updated } : s));
         setEditingServiceId(null);
       } else {
-        const res = await servicesAPI.create(newService);
-        setServices([...services, res.data]);
+        const created = await servicesAPI.create(newService);
+        setServices([...services, created]);
       }
       setNewService({ name: '', description: '', icon: '🙏', category: '' });
+      setServiceImageFile(null);
     } catch (err) {
       alert('Failed to save service: ' + (err.response?.data?.message || err.message));
     }
@@ -303,14 +293,15 @@ export default function AdminDashboard() {
     }
     try {
       if (editingStaffId) {
-        await staffAPI.update(editingStaffId, newStaff);
-        setStaff(staff.map(s => s.id === editingStaffId ? { ...newStaff, id: editingStaffId } : s));
+        const updated = await staffAPI.update(editingStaffId, newStaff);
+        setStaff(staff.map(s => s.id === editingStaffId ? { ...s, ...updated } : s));
         setEditingStaffId(null);
       } else {
-        const res = await staffAPI.create(newStaff);
-        setStaff([...staff, res.data]);
+        const created = await staffAPI.create(newStaff);
+        setStaff([...staff, created]);
       }
       setNewStaff({ name: '', position: '', designation: '', email: '', phone: '', bio: '' });
+      setStaffImageFile(null);
     } catch (err) {
       alert('Failed to save staff: ' + (err.response?.data?.message || err.message));
     }
@@ -318,27 +309,8 @@ export default function AdminDashboard() {
 
   const handleImageUpload = async (e) => {
     e.preventDefault();
-    if (!imageFile) {
-      setImageError('Please select an image');
-      return;
-    }
-    
-    try {
-      setImageUploading(true);
-      const formData = new FormData();
-      formData.append('file', imageFile);
-      formData.append('title', imageTitle || imageFile.name);
-      
-      const res = await imagesAPI.upload(formData);
-      setHomeImages([...homeImages, res.data]);
-      setImageFile(null);
-      setImageTitle('');
-      setImageError('');
-    } catch (err) {
-      setImageError('Failed to upload image: ' + (err.response?.data?.message || err.message));
-    } finally {
-      setImageUploading(false);
-    }
+    // Redirect to GalleryAdmin for image management
+    alert('Please use the Gallery Admin page to manage images.');
   };
 
   const handleSaveTimings = async () => {

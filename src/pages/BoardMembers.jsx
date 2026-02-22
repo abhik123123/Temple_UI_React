@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useLanguage } from '../context/LanguageContext';
-import { getAllBoardMembers } from '../services/boardMembersData';
+import { boardMembersAPI } from '../services/postgresAPI';
 import { usePageTracking } from '../hooks/usePageTracking';
 
 const translations = {
@@ -69,11 +69,11 @@ export default function BoardMembers() {
     fetchBoardMembers();
   }, []);
 
-  const fetchBoardMembers = () => {
+  const fetchBoardMembers = async () => {
     try {
       setLoading(true);
-      const data = getAllBoardMembers();
-      setBoardMembers(data);
+      const data = await boardMembersAPI.getAll();
+      setBoardMembers(Array.isArray(data) ? data : []);
       setError(null);
     } catch (err) {
       console.error('Error fetching board members:', err);

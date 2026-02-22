@@ -1,12 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
-import { 
-  getAllBoardMembers, 
-  addBoardMember, 
-  updateBoardMember, 
-  deleteBoardMember 
-} from '../services/boardMembersData';
+import { boardMembersAPI } from '../services/postgresAPI';
 
 const translations = {
   en: {
@@ -119,16 +114,16 @@ export default function BoardMembersAdmin() {
     }
   }, [isAuthenticated, user?.role]);
 
-  const fetchMembers = () => {
+  const fetchMembers = async () => {
     try {
       setLoading(true);
-      const data = getAllBoardMembers();
-      setMembers(data);
+      const data = await boardMembersAPI.getAll();
+      setMembers(Array.isArray(data) ? data : []);
       setError(null);
     } catch (err) {
-      console.error('Error loading board members:', err);
+      console.error('Error fetching board members:', err);
       setMembers([]);
-      setError('Unable to load board members.');
+      setError('Unable to load board members. Is the backend running?');
     } finally {
       setLoading(false);
     }
@@ -164,21 +159,20 @@ export default function BoardMembersAdmin() {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       if (editingId) {
-        updateBoardMember(editingId, formData);
-        alert(t.success + ': Member updated');
+        await boardMembersAPI.update(editingId, formData);
       } else {
-        addBoardMember(formData);
-        alert(t.success + ': Member added');
+        await boardMembersAPI.create(formData);
       }
-      fetchMembers();
+      await fetchMembers();
       resetForm();
+      alert(t.success);
     } catch (err) {
       console.error('Error saving member:', err);
-      alert(t.error + ': ' + err.message);
+      alert(t.error + ': ' + (err.response?.data?.error || err.message));
     }
   };
 
@@ -197,15 +191,15 @@ export default function BoardMembersAdmin() {
     setShowForm(true);
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     try {
-      deleteBoardMember(id);
-      fetchMembers();
+      await boardMembersAPI.delete(id);
+      await fetchMembers();
       setShowDeleteConfirm(null);
-      alert(t.success + ': Member deleted');
+      alert(t.success);
     } catch (err) {
       console.error('Error deleting member:', err);
-      alert(t.error + ': ' + err.message);
+      alert(t.error + ': ' + (err.response?.data?.error || err.message));
     }
   };
 

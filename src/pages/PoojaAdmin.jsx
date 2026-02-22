@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useLanguage } from '../context/LanguageContext';
-import { getAllPoojaBooks, addPoojaBook, updatePoojaBook, deletePoojaBook } from '../services/poojaData';
+import { poojaBooksAPI } from '../services/postgresAPI';
 
 export default function PoojaAdmin() {
   const { t } = useLanguage();
@@ -13,8 +13,7 @@ export default function PoojaAdmin() {
     category: 'general',
     description: '',
     details: '',
-    image: null,
-    imageUrl: '',
+    icon: '📚',
     language: 'Sanskrit & English',
     pages: 0,
     downloadable: true,
@@ -26,7 +25,9 @@ export default function PoojaAdmin() {
   }, []);
 
   const loadBooks = () => {
-    setBooks(getAllPoojaBooks());
+    poojaBooksAPI.getAll()
+      .then(data => setBooks(data))
+      .catch(err => console.error('Failed to load pooja books:', err));
   };
 
   const handleImageUpload = (e) => {
@@ -61,49 +62,22 @@ export default function PoojaAdmin() {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      if (formData.image) {
-        // New image file uploaded - convert to base64
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          const bookData = {
-            ...formData,
-            imageUrl: reader.result,
-            image: undefined,
-            icon: undefined // Clear icon when image is uploaded
-          };
-
-          if (editingBook) {
-            updatePoojaBook(editingBook.id, bookData);
-          } else {
-            addPoojaBook(bookData);
-          }
-          loadBooks();
-          closeModal();
-        };
-        reader.readAsDataURL(formData.image);
+      const payload = {
+        ...formData,
+        details: typeof formData.details === 'string'
+          ? formData.details.split(',').map(d => d.trim()).filter(Boolean)
+          : formData.details,
+      };
+      if (editingBook) {
+        await poojaBooksAPI.update(editingBook.id, payload);
       } else {
-        // No new image uploaded - preserve existing imageUrl
-        const bookData = {
-          ...formData,
-          image: undefined
-        };
-        
-        // If editing and no new image, keep the existing imageUrl
-        if (editingBook && !formData.imageUrl) {
-          bookData.imageUrl = editingBook.imageUrl || editingBook.icon || '';
-        }
-        
-        if (editingBook) {
-          updatePoojaBook(editingBook.id, bookData);
-        } else {
-          addPoojaBook(bookData);
-        }
-        loadBooks();
-        closeModal();
+        await poojaBooksAPI.create(payload);
       }
+      loadBooks();
+      closeModal();
     } catch (error) {
       alert('Error saving book: ' + error.message);
     }
@@ -116,20 +90,18 @@ export default function PoojaAdmin() {
       category: book.category,
       description: book.description,
       details: Array.isArray(book.details) ? book.details.join(', ') : '',
-      image: null,
-      imageUrl: book.imageUrl || book.icon || '',
+      icon: book.icon || '📚',
       language: book.language,
       pages: book.pages,
-      downloadable: book.downloadable || true,
+      downloadable: book.downloadable !== false,
       level: book.level
     });
-    setImagePreview(book.imageUrl || null);
     setIsModalOpen(true);
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this book?')) {
-      deletePoojaBook(id);
+      await poojaBooksAPI.delete(id);
       loadBooks();
     }
   };
@@ -143,8 +115,7 @@ export default function PoojaAdmin() {
       category: 'general',
       description: '',
       details: '',
-      image: null,
-      imageUrl: '',
+      icon: '📚',
       language: 'Sanskrit & English',
       pages: 0,
       downloadable: true,

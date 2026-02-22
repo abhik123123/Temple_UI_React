@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useLanguage } from '../context/LanguageContext';
-import { 
-  getAllStaff
-} from '../services/staffData';
+import { staffAPI } from '../services/postgresAPI';
 
 const translations = {
   en: {
@@ -118,11 +116,11 @@ export default function Staff() {
     fetchStaff();
   }, []);
 
-  const fetchStaff = () => {
+  const fetchStaff = async () => {
     try {
       setLoading(true);
-      const data = getAllStaff();
-      setStaff(data);
+      const data = await staffAPI.getAll();
+      setStaff(Array.isArray(data) ? data : []);
       setError(null);
     } catch (err) {
       console.error('Error fetching staff:', err);

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useLanguage } from '../context/LanguageContext';
-import { timingsAPI } from '../services/templeAPI';
+import { timingsAPI } from '../services/postgresAPI';
 
 export default function Timings() {
   const { t } = useLanguage();
@@ -14,12 +14,11 @@ export default function Timings() {
   const fetchTimings = async () => {
     try {
       setLoading(true);
-      const response = await timingsAPI.getAll();
-      const timingsData = response.data || [];
-      setTimings(timingsData);
+      const data = await timingsAPI.getAll();
+      setTimings(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Error fetching timings:', error);
-      // Fallback to default timings if fetch fails
+      // Fallback to default timings if backend not available
       setTimings([
         { 
           day: 'Monday', 

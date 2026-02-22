@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
-import { timingsAPI } from '../services/templeAPI';
+import { timingsAPI } from '../services/postgresAPI';
 import IndiaTime from '../components/IndiaTime';
 
 const translations = {
@@ -86,18 +86,17 @@ export default function TimingsAdmin() {
   const fetchTimings = async () => {
     try {
       setLoading(true);
-      const response = await timingsAPI.getAll();
-      const timingsData = response?.data || [];
-      
-      // Convert array format to object format for admin form
+      const data = await timingsAPI.getAll();
+      const timingsArray = Array.isArray(data) ? data : [];
+
       const timingsObject = {};
-      timingsData.forEach(dayTiming => {
+      timingsArray.forEach(dayTiming => {
         timingsObject[dayTiming.day] = {
           slots: dayTiming.slots || [],
           notes: dayTiming.notes || ''
         };
       });
-      
+
       setTimings(timingsObject);
       setOriginalTimings(JSON.parse(JSON.stringify(timingsObject)));
       setError(null);

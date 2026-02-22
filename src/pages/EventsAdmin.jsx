@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
-import { eventsAPI } from '../services/templeAPI';
+import { eventsAPI } from '../services/postgresAPI';
 
 // Helper function to display images (now using base64 from localStorage)
 const getImageUrl = (imageData) => {
@@ -153,22 +153,11 @@ export default function EventsAdmin() {
     try {
       setLoading(true);
       const data = await eventsAPI.getAll();
-      const eventsArray = Array.isArray(data) ? data : data?.data || [];
-      
-      // Process events to ensure all fields are properly mapped
-      const processedEvents = eventsArray.map(event => ({
-        ...event,
-        title: event.eventName || event.title,
-        date: event.eventDate || event.date,
-        imageUrl: getImageUrl(event.photoUrl || event.imageUrl || event.image)
-      }));
-      
-      console.log('Loaded events from localStorage:', processedEvents);
-      setEvents(processedEvents);
+      setEvents(Array.isArray(data) ? data : []);
       setError(null);
     } catch (err) {
       console.error('Error loading events:', err);
-      setError('Failed to load events: ' + err.message);
+      setError('Unable to load events. Is the backend running?');
       setEvents([]);
     } finally {
       setLoading(false);
@@ -291,109 +280,36 @@ export default function EventsAdmin() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // Validate that end time is not earlier than start time
-    if (formData.startTime && formData.endTime) {
-      const startMinutes = parseInt(formData.startTime.split(':')[0]) * 60 + parseInt(formData.startTime.split(':')[1]);
-      const endMinutes = parseInt(formData.endTime.split(':')[0]) * 60 + parseInt(formData.endTime.split(':')[1]);
-      
-      if (endMinutes < startMinutes) {
-        alert('End time cannot be earlier than start time. Please check the times and try again.');
-        return;
-      }
+
+    if (formData.startTime && formData.endTime && formData.startTime >= formData.endTime) {
+      alert('End time must be after start time.');
+      return;
     }
 
-    // Check if editing and nothing has changed
-    if (editingId && originalData) {
-      const hasChanges = 
-        formData.title !== originalData.title ||
-        formData.date !== originalData.date ||
-        formData.startTime !== originalData.startTime ||
-        formData.endTime !== originalData.endTime ||
-        formData.location !== originalData.location ||
-        formData.description !== originalData.description ||
-        formData.category !== originalData.category ||
-        formData.imageFile !== null; // New image uploaded
-
-      if (!hasChanges) {
-        alert('⚠️ No changes detected. Please modify the event details before saving.');
-        return;
-      }
-    }
-    
     try {
-      // Prepare FormData for multipart submission when image is present
-      let submitData;
-      
-      if (formData.imageFile) {
-        // Use FormData for multipart/form-data with proper structure
-        // Backend expects: event (JSON) and photo (file)
-        submitData = new FormData();
-        
-        // Create the event JSON object matching backend field names
-        const eventData = {
-          eventName: formData.title,
-          description: formData.description,
-          eventDate: formData.date,
-          startTime: formData.startTime ? (formData.startTime.split(':').length === 2 ? formData.startTime + ':00' : formData.startTime) : null,
-          endTime: formData.endTime ? (formData.endTime.split(':').length === 2 ? formData.endTime + ':00' : formData.endTime) : null,
-          location: formData.location,
-          category: formData.category,
-          status: 'Upcoming'
-        };
-        
-        // Append event data as JSON blob with proper content type
-        const eventBlob = new Blob([JSON.stringify(eventData)], {
-          type: 'application/json'
-        });
-        submitData.append('event', eventBlob);
-        
-        // Append photo file with correct part name and ensure JPEG mime type
-        submitData.append('photo', formData.imageFile, formData.imageFile.name);
-        
-        console.log('Submitting with image:', {
-          operation: editingId ? 'update' : 'create',
-          imageFile: formData.imageFile.name,
-          imageType: formData.imageFile.type,
-          imageSize: formData.imageFile.size,
-          eventData: eventData
-        });
-      } else {
-        // Send as JSON when no new file (for updates without image change)
-        submitData = {
-          eventName: formData.title,
-          description: formData.description,
-          eventDate: formData.date,
-          startTime: formData.startTime ? (formData.startTime.split(':').length === 2 ? formData.startTime + ':00' : formData.startTime) : null,
-          endTime: formData.endTime ? (formData.endTime.split(':').length === 2 ? formData.endTime + ':00' : formData.endTime) : null,
-          location: formData.location,
-          category: formData.category,
-          status: 'Upcoming'
-        };
-        
-        console.log('Submitting without image:', {
-          operation: editingId ? 'update' : 'create',
-          data: submitData
-        });
-      }
-      
+      const payload = {
+        title: formData.title,
+        description: formData.description,
+        eventDate: formData.date,
+        startTime: formData.startTime || null,
+        endTime: formData.endTime || null,
+        location: formData.location,
+        category: formData.category,
+        status: 'Upcoming',
+        imageUrl: formData.imageUrl || null,
+      };
+
       if (editingId) {
-        const result = await eventsAPI.update(editingId, submitData);
-        console.log('Update response:', result);
+        await eventsAPI.update(editingId, payload);
       } else {
-        const result = await eventsAPI.create(submitData);
-        console.log('Create response:', result);
+        await eventsAPI.create(payload);
       }
-      fetchEvents();
+      await fetchEvents();
       resetForm();
+      alert(t.success);
     } catch (err) {
-      console.error('Submit error:', err);
-      console.error('Error details:', {
-        response: err.response?.data,
-        status: err.response?.status,
-        headers: err.response?.headers
-      });
-      alert(err.response?.data?.message || err.message || t.error);
+      console.error('Error saving event:', err);
+      alert(t.error + ': ' + (err.response?.data?.error || err.message));
     }
   };
 
@@ -427,10 +343,11 @@ export default function EventsAdmin() {
   const handleDelete = async (id) => {
     try {
       await eventsAPI.delete(id);
-      fetchEvents();
+      await fetchEvents();
       setShowDeleteConfirm(null);
+      alert(t.success);
     } catch (err) {
-      alert(err.response?.data?.message || t.error);
+      alert(t.error + ': ' + (err.response?.data?.error || err.message));
     }
   };
 

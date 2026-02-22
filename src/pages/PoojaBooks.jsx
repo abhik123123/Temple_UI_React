@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useLanguage } from '../context/LanguageContext';
-import { getAllPoojaBooks } from '../services/poojaData';
+import { poojaBooksAPI } from '../services/postgresAPI';
 
 export default function PoojaBooks() {
   const { t } = useLanguage();
@@ -9,7 +9,9 @@ export default function PoojaBooks() {
   const [selectedLevel, setSelectedLevel] = useState('all');
 
   useEffect(() => {
-    setBooks(getAllPoojaBooks());
+    poojaBooksAPI.getAll()
+      .then(data => setBooks(data))
+      .catch(err => console.error('Failed to load pooja books:', err));
   }, []);
 
   const categories = ['all', 'shiva', 'vishnu', 'ganesha', 'devi', 'krishna', 'rama', 'hanuman', 'general'];

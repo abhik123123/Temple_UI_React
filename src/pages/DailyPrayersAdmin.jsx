@@ -1,13 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
-import { 
-  getAllDailyPoojas, 
-  addPooja, 
-  updatePooja, 
-  deletePooja,
-  DAYS_OF_WEEK 
-} from '../services/dailyPoojasData';
+import { dailyPoojasAPI } from '../services/postgresAPI';
+
+const DAYS_OF_WEEK = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 const translations = {
   en: {
@@ -104,15 +100,11 @@ export default function DailyPrayersAdmin() {
   }, [isAuthenticated, user?.role]);
 
   const fetchPoojas = () => {
-    try {
-      setLoading(true);
-      const data = getAllDailyPoojas();
-      setPoojas(data);
-    } catch (err) {
-      console.error('Error loading poojas:', err);
-    } finally {
-      setLoading(false);
-    }
+    setLoading(true);
+    dailyPoojasAPI.getAll()
+      .then(data => setPoojas(data))
+      .catch(err => console.error('Error loading poojas:', err))
+      .finally(() => setLoading(false));
   };
 
   const handleInputChange = (e) => {
@@ -149,47 +141,32 @@ export default function DailyPrayersAdmin() {
       };
 
       if (editingId) {
-        // Edit mode - check if multiple days are selected
         if (formData.selectedDays.length > 1) {
-          // User wants to duplicate to multiple days
-          // First, update the original prayer
-          updatePooja(editingId, { ...poojaData, day: formData.selectedDays[0] });
-          
-          // Then create duplicates for the other selected days
+          await dailyPoojasAPI.update(editingId, { ...poojaData, day: formData.selectedDays[0] });
           for (let i = 1; i < formData.selectedDays.length; i++) {
-            addPooja({ ...poojaData, day: formData.selectedDays[i] });
+            await dailyPoojasAPI.create({ ...poojaData, day: formData.selectedDays[i] });
           }
-          
           alert(`Success! Prayer updated and duplicated to ${formData.selectedDays.length} day(s): ${formData.selectedDays.join(', ')}`);
         } else if (formData.selectedDays.length === 1) {
-          // Just update the single day
-          updatePooja(editingId, { ...poojaData, day: formData.selectedDays[0] });
+          await dailyPoojasAPI.update(editingId, { ...poojaData, day: formData.selectedDays[0] });
           alert(t.success);
         } else {
           alert('Please select at least one day');
           return;
         }
       } else {
-        // Add mode - check which days are selected
         if (formData.selectedDays.length > 0) {
-          // Create prayer for selected specific days
-          formData.selectedDays.forEach(day => {
-            addPooja({ ...poojaData, day: day });
-          });
-          const repeatMessage = formData.repeatEveryWeek 
-            ? ` This prayer will repeat every week on these days.`
-            : '';
-          alert(`Success! Prayer added to ${formData.selectedDays.length} selected day(s): ${formData.selectedDays.join(', ')}.${repeatMessage}`);
+          for (const day of formData.selectedDays) {
+            await dailyPoojasAPI.create({ ...poojaData, day });
+          }
+          alert(`Success! Prayer added to ${formData.selectedDays.length} selected day(s): ${formData.selectedDays.join(', ')}`);
         } else {
-          // No specific days selected - show error
           alert('Please select at least one day from the checkboxes above');
           return;
         }
       }
-      
-      const updatedPoojas = getAllDailyPoojas();
-      setPoojas(updatedPoojas);
-      
+
+      await fetchPoojas();
       resetForm();
     } catch (err) {
       console.error('Error in handleSubmit:', err);
@@ -223,7 +200,7 @@ export default function DailyPrayersAdmin() {
 
   const handleDelete = async (id) => {
     try {
-      deletePooja(id);
+      await dailyPoojasAPI.delete(id);
       fetchPoojas();
       setShowDeleteConfirm(null);
       alert(t.success);

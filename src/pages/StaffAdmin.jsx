@@ -1,12 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
-import { 
-  getAllStaff, 
-  addStaff, 
-  updateStaff, 
-  deleteStaff 
-} from '../services/staffData';
+import { staffAPI } from '../services/postgresAPI';
 
 const translations = {
   en: {
@@ -162,14 +157,13 @@ export default function StaffAdmin() {
   const fetchStaff = async () => {
     try {
       setLoading(true);
-      const data = await getAllStaff();
-      const staffList = Array.isArray(data) ? data : data?.data || [];
-      setStaff(staffList);
+      const data = await staffAPI.getAll();
+      setStaff(Array.isArray(data) ? data : []);
       setError(null);
     } catch (err) {
-      console.warn('Backend not available, using mock data:', err.message);
-      setStaff(MOCK_STAFF);
-      setError(null);
+      console.error('Error loading staff:', err);
+      setError('Unable to load staff. Is the backend running?');
+      setStaff([]);
     } finally {
       setLoading(false);
     }
@@ -207,17 +201,27 @@ export default function StaffAdmin() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      const payload = {
+        fullName: formData.fullName,
+        role: formData.role,
+        department: formData.department || '',
+        phoneNumber: formData.phone,
+        email: formData.email,
+        joiningDate: formData.joiningDate || null,
+        responsibilities: formData.responsibilities,
+        profileImageUrl: formData.profileImageUrl || null,
+      };
       if (editingId) {
-        await updateStaff(editingId, formData);
+        await staffAPI.update(editingId, payload);
       } else {
-        await addStaff(formData);
+        await staffAPI.create(payload);
       }
-      fetchStaff();
+      await fetchStaff();
       resetForm();
       alert(t.success + '!');
     } catch (err) {
       console.error('Error saving staff:', err);
-      alert(err.message || err.response?.data?.message || t.error);
+      alert(t.error + ': ' + (err.response?.data?.error || err.message));
     }
   };
 
@@ -238,13 +242,13 @@ export default function StaffAdmin() {
 
   const handleDelete = async (id) => {
     try {
-      await deleteStaff(id);
-      fetchStaff();
+      await staffAPI.delete(id);
+      await fetchStaff();
       setShowDeleteConfirm(null);
       alert(t.success + '!');
     } catch (err) {
       console.error('Error deleting staff:', err);
-      alert(err.message || err.response?.data?.message || t.error);
+      alert(t.error + ': ' + (err.response?.data?.error || err.message));
     }
   };
 
