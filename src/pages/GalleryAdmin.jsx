@@ -60,14 +60,13 @@ export default function GalleryAdmin() {
       };
 
       try {
-        // In production, send to API
-        // const response = await fetch('/api/gallery/youtube', { method: 'POST', body: JSON.stringify(newLink) });
-        
-        // For now, add locally
+        // Save to localStorage
+        const updatedYoutubeLinks = [...galleryData.youtubeLinks, newLink];
         setGalleryData({
           ...galleryData,
-          youtubeLinks: [...galleryData.youtubeLinks, newLink]
+          youtubeLinks: updatedYoutubeLinks
         });
+        localStorage.setItem('temple_gallery_youtube', JSON.stringify(updatedYoutubeLinks));
         
         alert('YouTube link added successfully!');
         resetForm();
@@ -91,28 +90,41 @@ export default function GalleryAdmin() {
       formDataToSend.append('type', activeTab);
 
       try {
-        // In production, send to API
-        // const response = await fetch('/api/gallery/upload', { method: 'POST', body: formDataToSend });
-        
-        // For now, create mock entries
-        const newItems = formData.files.map((file, index) => ({
-          id: Date.now() + index,
-          title: formData.title || file.name,
-          description: formData.description,
-          url: URL.createObjectURL(file),
-          createdAt: new Date().toISOString()
-        }));
+        // Convert files to base64 and save to localStorage
+        const newItems = await Promise.all(
+          formData.files.map(async (file, index) => {
+            const base64 = await new Promise((resolve) => {
+              const reader = new FileReader();
+              reader.onloadend = () => resolve(reader.result);
+              reader.readAsDataURL(file);
+            });
+
+            return {
+              id: Date.now() + index,
+              title: formData.title || file.name,
+              description: formData.description,
+              url: base64,
+              createdAt: new Date().toISOString()
+            };
+          })
+        );
 
         if (activeTab === 'images') {
+          const updatedImages = [...galleryData.images, ...newItems];
           setGalleryData({
             ...galleryData,
-            images: [...galleryData.images, ...newItems]
+            images: updatedImages
           });
-        } else {
+          // Save to localStorage
+          localStorage.setItem('temple_gallery_images', JSON.stringify(updatedImages));
+        } else if (activeTab === 'videos') {
+          const updatedVideos = [...galleryData.videos, ...newItems];
           setGalleryData({
             ...galleryData,
-            videos: [...galleryData.videos, ...newItems]
+            videos: updatedVideos
           });
+          // Save to localStorage
+          localStorage.setItem('temple_gallery_videos', JSON.stringify(updatedVideos));
         }
 
         alert(`${formData.files.length} ${activeTab} added successfully!`);
@@ -130,25 +142,28 @@ export default function GalleryAdmin() {
     }
 
     try {
-      // In production, call API
-      // await fetch(`/api/gallery/${type}/${id}`, { method: 'DELETE' });
-
-      // For now, remove locally
+      // Remove locally and save to localStorage
       if (type === 'images') {
+        const updatedImages = galleryData.images.filter(item => item.id !== id);
         setGalleryData({
           ...galleryData,
-          images: galleryData.images.filter(item => item.id !== id)
+          images: updatedImages
         });
+        localStorage.setItem('temple_gallery_images', JSON.stringify(updatedImages));
       } else if (type === 'videos') {
+        const updatedVideos = galleryData.videos.filter(item => item.id !== id);
         setGalleryData({
           ...galleryData,
-          videos: galleryData.videos.filter(item => item.id !== id)
+          videos: updatedVideos
         });
+        localStorage.setItem('temple_gallery_videos', JSON.stringify(updatedVideos));
       } else if (type === 'youtube') {
+        const updatedYoutube = galleryData.youtubeLinks.filter(item => item.id !== id);
         setGalleryData({
           ...galleryData,
-          youtubeLinks: galleryData.youtubeLinks.filter(item => item.id !== id)
+          youtubeLinks: updatedYoutube
         });
+        localStorage.setItem('temple_gallery_youtube', JSON.stringify(updatedYoutube));
       }
 
       alert('Item deleted successfully!');

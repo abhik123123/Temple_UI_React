@@ -23,9 +23,16 @@ export default function Gallery() {
   const fetchGalleryData = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/gallery');
-      const data = await response.json();
-      setGalleryData(data);
+      // Load from localStorage
+      const savedImages = JSON.parse(localStorage.getItem('temple_gallery_images') || '[]');
+      const savedVideos = JSON.parse(localStorage.getItem('temple_gallery_videos') || '[]');
+      const savedYoutubeLinks = JSON.parse(localStorage.getItem('temple_gallery_youtube') || '[]');
+      
+      setGalleryData({
+        images: savedImages,
+        videos: savedVideos,
+        youtubeLinks: savedYoutubeLinks
+      });
     } catch (error) {
       console.error('Error fetching gallery data:', error);
     } finally {
