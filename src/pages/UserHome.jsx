@@ -68,13 +68,14 @@ export default function UserHome() {
         backgroundImage: `url(${shivaImages[currentImageIndex]})`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
-        backgroundAttachment: 'fixed',
+        backgroundAttachment: 'scroll',
         position: 'relative',
-        minHeight: '500px',
+        minHeight: '400px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'flex-start',
-        paddingLeft: '3rem'
+        paddingLeft: '2rem',
+        paddingRight: '2rem'
       }}>
         {/* Dark overlay */}
         <div style={{
@@ -88,17 +89,17 @@ export default function UserHome() {
         }} />
         
         {/* Hero content */}
-        <div style={{ position: 'relative', zIndex: 2, color: 'white', maxWidth: '600px' }}>
-          <h1 style={{ fontSize: '3.5rem', fontWeight: 'bold', marginBottom: '1rem', textShadow: '2px 2px 4px rgba(0,0,0,0.8)' }}>
+        <div style={{ position: 'relative', zIndex: 2, color: 'white', maxWidth: '600px', width: '100%' }}>
+          <h1 style={{ fontSize: 'clamp(1.5rem, 5vw, 3.5rem)', fontWeight: 'bold', marginBottom: '1rem', textShadow: '2px 2px 4px rgba(0,0,0,0.8)' }}>
             Raja Rajeshwara Temple
           </h1>
-          <p style={{ fontSize: '1.3rem', marginBottom: '2rem', fontStyle: 'italic', textShadow: '1px 1px 3px rgba(0,0,0,0.8)' }}>
+          <p style={{ fontSize: 'clamp(1rem, 3vw, 1.3rem)', marginBottom: '2rem', fontStyle: 'italic', textShadow: '1px 1px 3px rgba(0,0,0,0.8)' }}>
             "ॐ नमः शिवाय"
           </p>
-          <p style={{ fontSize: '1.1rem', marginBottom: '1.5rem', textShadow: '1px 1px 3px rgba(0,0,0,0.8)' }}>
+          <p style={{ fontSize: 'clamp(0.9rem, 2.5vw, 1.1rem)', marginBottom: '1.5rem', textShadow: '1px 1px 3px rgba(0,0,0,0.8)' }}>
             Home of Peace • Temple of Devotion
           </p>
-          <div style={{ display: 'flex', gap: '1rem' }}>
+          <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
             <button
               onClick={() => navigate('/events')}
               style={{
@@ -110,7 +111,9 @@ export default function UserHome() {
                 borderRadius: '5px',
                 cursor: 'pointer',
                 fontWeight: 'bold',
-                transition: 'all 0.3s ease'
+                transition: 'all 0.3s ease',
+                flex: '1',
+                minWidth: '120px'
               }}
               onMouseEnter={(e) => {
                 e.target.style.backgroundColor = '#d4a820';
@@ -134,7 +137,9 @@ export default function UserHome() {
                 borderRadius: '5px',
                 cursor: 'pointer',
                 fontWeight: 'bold',
-                transition: 'all 0.3s ease'
+                transition: 'all 0.3s ease',
+                flex: '1',
+                minWidth: '120px'
               }}
               onMouseEnter={(e) => {
                 e.target.style.backgroundColor = '#d4a820';
@@ -180,8 +185,8 @@ export default function UserHome() {
       </div>
 
       {/* ABOUT US SECTION */}
-      <section style={{ padding: '3rem 2rem', backgroundColor: '#f9f9f9' }}>
-        <h2 style={{ textAlign: 'center', fontSize: '2.5rem', marginBottom: '2rem', color: '#0B1C3F' }}>
+      <section style={{ padding: 'clamp(1.5rem, 4vw, 3rem) clamp(1rem, 3vw, 2rem)', backgroundColor: '#f9f9f9' }}>
+        <h2 style={{ textAlign: 'center', fontSize: 'clamp(1.5rem, 4vw, 2.5rem)', marginBottom: '2rem', color: '#0B1C3F' }}>
           ✨ About Us
         </h2>
         
@@ -232,14 +237,14 @@ export default function UserHome() {
       </section>
 
       {/* SERVICES SECTION */}
-      <section style={{ padding: '3rem 2rem' }}>
-        <h2 style={{ textAlign: 'center', fontSize: '2.5rem', marginBottom: '3rem', color: '#0B1C3F' }}>
+      <section style={{ padding: 'clamp(1.5rem, 4vw, 3rem) clamp(1rem, 3vw, 2rem)' }}>
+        <h2 style={{ textAlign: 'center', fontSize: 'clamp(1.5rem, 4vw, 2.5rem)', marginBottom: '3rem', color: '#0B1C3F' }}>
           🙏 Our Services
         </h2>
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-          gap: '2rem',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+          gap: '1rem',
           maxWidth: '1200px',
           margin: '0 auto'
         }}>
@@ -282,13 +287,13 @@ export default function UserHome() {
 
       {/* CALL TO ACTION */}
       <section style={{
-        padding: '3rem 2rem',
-        backgroundColor: 'linear-gradient(135deg, #0B1C3F 0%, #112A57 100%)',
+        padding: 'clamp(1.5rem, 4vw, 3rem) clamp(1rem, 3vw, 2rem)',
+        background: 'linear-gradient(135deg, #0B1C3F 0%, #112A57 100%)',
         color: 'white',
         textAlign: 'center'
       }}>
-        <h2 style={{ fontSize: '2rem', marginBottom: '1rem' }}>Join Our Temple Community</h2>
-        <p style={{ fontSize: '1.1rem', marginBottom: '2rem', opacity: '0.9' }}>
+        <h2 style={{ fontSize: 'clamp(1.3rem, 3vw, 2rem)', marginBottom: '1rem' }}>Join Our Temple Community</h2>
+        <p style={{ fontSize: 'clamp(0.9rem, 2vw, 1.1rem)', marginBottom: '2rem', opacity: '0.9' }}>
           Be part of our spiritual journey and contribute to our sacred mission
         </p>
         <button

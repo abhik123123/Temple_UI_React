@@ -29,6 +29,8 @@ nav .nav-container {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
 }
 
 nav .logo {
@@ -48,6 +50,7 @@ nav ul {
   display: flex;
   list-style: none;
   gap: 0.5rem;
+  flex-wrap: wrap;
 }
 
 nav a {
@@ -65,6 +68,46 @@ nav a:hover {
   color: #FFD700;
   background-color: rgba(255, 215, 0, 0.2);
   border-bottom: 2px solid #FFD700;
+}
+
+/* Hamburger Menu */
+.hamburger {
+  display: none;
+  flex-direction: column;
+  cursor: pointer;
+  gap: 5px;
+  background: none;
+  border: none;
+  padding: 4px;
+}
+
+.hamburger span {
+  display: block;
+  width: 25px;
+  height: 3px;
+  background: #FFD700;
+  border-radius: 3px;
+  transition: all 0.3s ease;
+}
+
+.hamburger.open span:nth-child(1) {
+  transform: rotate(45deg) translate(5px, 6px);
+}
+
+.hamburger.open span:nth-child(2) {
+  opacity: 0;
+}
+
+.hamburger.open span:nth-child(3) {
+  transform: rotate(-45deg) translate(5px, -6px);
+}
+
+/* Mobile nav menu */
+.nav-menu {
+  display: flex;
+  list-style: none;
+  gap: 0.5rem;
+  flex-wrap: wrap;
 }
 
 /* Main Container */
@@ -185,12 +228,14 @@ nav a:hover {
   background: white;
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(139, 69, 19, 0.1);
+  -webkit-overflow-scrolling: touch;
 }
 
 table {
   width: 100%;
   border-collapse: collapse;
   background: white;
+  min-width: 500px;
 }
 
 table thead {
@@ -221,14 +266,8 @@ table tbody tr:hover {
 }
 
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 /* Footer */
@@ -267,5 +306,164 @@ footer p {
 
   table th, table td {
     padding: 0.75rem;
+  }
+}
+
+/* =====================
+   RESPONSIVE - TABLET
+   ===================== */
+@media (max-width: 1024px) {
+  nav a {
+    padding: 0.5rem 0.6rem;
+    font-size: 0.8rem;
+  }
+
+  .page {
+    margin: 1rem;
+    padding: 1.5rem;
+  }
+}
+
+/* =====================
+   RESPONSIVE - MOBILE
+   ===================== */
+@media (max-width: 768px) {
+
+  /* Nav */
+  nav .nav-container {
+    padding: 0 1rem;
+    flex-wrap: nowrap;
+    justify-content: space-between;
+  }
+
+  .hamburger {
+    display: flex;
+  }
+
+  .nav-menu {
+    display: none;
+    flex-direction: column;
+    width: 100%;
+    background: linear-gradient(135deg, #2C3E50 0%, #34495E 100%);
+    padding: 1rem 0;
+    gap: 0;
+    order: 3;
+  }
+
+  .nav-menu.open {
+    display: flex;
+  }
+
+  .nav-menu li {
+    width: 100%;
+  }
+
+  .nav-menu li a {
+    display: block;
+    width: 100%;
+    padding: 0.85rem 1.5rem;
+    font-size: 1rem;
+    border-bottom: 1px solid rgba(255,215,0,0.1);
+    border-radius: 0;
+  }
+
+  .nav-menu li a:hover {
+    background: rgba(255, 215, 0, 0.15);
+    border-bottom: 1px solid rgba(255,215,0,0.1);
+  }
+
+  /* Hide time display on mobile */
+  .nav-time {
+    display: none;
+  }
+
+  /* Hero */
+  .hero {
+    padding: 3rem 1rem;
+  }
+
+  .hero h1 {
+    font-size: 1.8rem;
+  }
+
+  .hero p {
+    font-size: 0.95rem;
+  }
+
+  /* Page */
+  .page {
+    margin: 0.5rem;
+    padding: 1rem;
+    border-radius: 8px;
+  }
+
+  /* Cards */
+  .cards-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  /* Tables */
+  table {
+    font-size: 0.82rem;
+  }
+
+  table th, table td {
+    padding: 0.6rem 0.5rem;
+  }
+
+  /* Buttons */
+  .btn {
+    width: 100%;
+    text-align: center;
+    padding: 0.85rem 1rem;
+  }
+
+  /* Container */
+  .container {
+    margin: 0.5rem;
+    padding: 1rem;
+    border-radius: 8px;
+  }
+
+  /* Footer */
+  footer {
+    padding: 1.5rem 1rem;
+  }
+
+  footer > div > div:first-child {
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+}
+
+/* =====================
+   RESPONSIVE - SMALL MOBILE
+   ===================== */
+@media (max-width: 480px) {
+  .hero h1 {
+    font-size: 1.4rem;
+  }
+
+  .hero p {
+    font-size: 0.85rem;
+  }
+
+  .page {
+    margin: 0;
+    border-radius: 0;
+    padding: 0.75rem;
+  }
+
+  table {
+    font-size: 0.75rem;
+  }
+
+  table th, table td {
+    padding: 0.5rem 0.4rem;
+  }
+
+  nav .logo span {
+    font-size: 0.9rem;
   }
 }

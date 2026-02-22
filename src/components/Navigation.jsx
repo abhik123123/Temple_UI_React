@@ -9,32 +9,30 @@ export default function Navigation() {
   const navigate = useNavigate();
   const location = useLocation();
   const [time, setTime] = useState(new Date());
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const isAdminPage = location.pathname.includes('/admin') || location.pathname.includes('/home/admin');
+
+  // Close menu on route change
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [location.pathname]);
 
   useEffect(() => {
     const timer = setInterval(() => {
       setTime(new Date());
     }, 1000);
-
     return () => clearInterval(timer);
   }, []);
 
   const getIndiaTime = () => {
     const istTime = new Date(time.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
-    
     const hours = String(istTime.getHours()).padStart(2, '0');
     const minutes = String(istTime.getMinutes()).padStart(2, '0');
     const seconds = String(istTime.getSeconds()).padStart(2, '0');
-    
-    const day = istTime.toLocaleDateString('en-US', { 
-      weekday: 'short',
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      timeZone: 'Asia/Kolkata'
+    const day = istTime.toLocaleDateString('en-US', {
+      weekday: 'short', year: 'numeric', month: 'short', day: 'numeric', timeZone: 'Asia/Kolkata'
     });
-
     return { time: `${hours}:${minutes}:${seconds}`, date: day };
   };
 
@@ -48,27 +46,35 @@ export default function Navigation() {
   return (
     <nav>
       <div className="nav-container">
+        {/* Logo */}
         <Link to={isAdminPage ? "/home/admin" : "/home"} className="logo" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <img src="/images/temple-images/shiva-linga-logo.png" alt="Temple Logo" style={{ height: '35px', width: '35px', objectFit: 'contain', borderRadius: '4px' }} />
           <span style={{ fontSize: '1.1rem' }}>Raja Rajeshwara</span>
         </Link>
-        <ul>
+
+        {/* Hamburger Button (mobile only) */}
+        <button className={`hamburger ${menuOpen ? 'open' : ''}`} onClick={() => setMenuOpen(!menuOpen)} aria-label="Toggle menu">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+
+        {/* Nav Links */}
+        <ul className={`nav-menu ${menuOpen ? 'open' : ''}`}>
           <li><Link to={isAdminPage ? "/home/admin" : "/home"}>{t('nav_home')}</Link></li>
           <li><Link to={isAdminPage ? "/events/admin" : "/events"}>{t('nav_events')}</Link></li>
           <li><Link to={isAdminPage ? "/services/admin" : "/services"}>{t('nav_services')}</Link></li>
-          {/* Temporarily hidden features */}
-          {/* <li><Link to={isAdminPage ? "/pooja-books/admin" : "/pooja-books"}>📚 Pooja Books</Link></li> */}
-          {/* <li><Link to={isAdminPage ? "/bajanas/admin" : "/bajanas"}>🎵 Bajanas</Link></li> */}
           <li><Link to={isAdminPage ? "/gallery/admin" : "/gallery"}>Gallery</Link></li>
           <li><Link to={isAdminPage ? "/staff/admin" : "/staff"}>Staff</Link></li>
           <li><Link to={isAdminPage ? "/timings/admin" : "/timings"}>{t('nav_timings')}</Link></li>
           <li><Link to={isAdminPage ? "/board-members/admin" : "/board-members"}>Board</Link></li>
-          {/* Newsletter link removed */}
         </ul>
+
+        {/* Right side controls */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          {/* Time Display */}
-          <div style={{ 
-            display: 'flex', 
+          {/* Time Display - hidden on mobile via CSS */}
+          <div className="nav-time" style={{
+            display: 'flex',
             flexDirection: 'column',
             alignItems: 'flex-end',
             color: '#FFD700',
@@ -81,8 +87,8 @@ export default function Navigation() {
           </div>
 
           {/* Language Selector */}
-          <select 
-            value={language} 
+          <select
+            value={language}
             onChange={(e) => changeLanguage(e.target.value)}
             style={{
               background: 'rgba(255, 215, 0, 0.2)',
@@ -95,15 +101,15 @@ export default function Navigation() {
               fontWeight: '500'
             }}
           >
-            <option value="en" style={{ color: '#333', background: '#fff' }}>English</option>
-            <option value="te" style={{ color: '#333', background: '#fff' }}>తెలుగు</option>
-            <option value="hi" style={{ color: '#333', background: '#fff' }}>हिंदी</option>
+            <option value="en" style={{ color: '#333', background: '#fff' }}>EN</option>
+            <option value="te" style={{ color: '#333', background: '#fff' }}>తె</option>
+            <option value="hi" style={{ color: '#333', background: '#fff' }}>हि</option>
           </select>
 
-          {/* Only show user info and logout on admin pages */}
+          {/* Admin user info & logout */}
           {isAdminPage && user && (
             <>
-              <span style={{ color: '#FFD700', fontSize: '0.9rem', fontWeight: '500' }}>
+              <span style={{ color: '#FFD700', fontSize: '0.9rem', fontWeight: '500', display: 'none' }} className="admin-user">
                 👤 {user.name || user.email}
               </span>
               <button
@@ -119,20 +125,13 @@ export default function Navigation() {
                   fontWeight: '500',
                   transition: 'all 0.3s ease'
                 }}
-                onMouseEnter={(e) => {
-                  e.target.style.background = '#FFD700';
-                  e.target.style.color = '#8B4513';
-                }}
-                onMouseLeave={(e) => {
-                  e.target.style.background = 'rgba(255, 215, 0, 0.2)';
-                  e.target.style.color = '#FFD700';
-                }}
+                onMouseEnter={(e) => { e.target.style.background = '#FFD700'; e.target.style.color = '#8B4513'; }}
+                onMouseLeave={(e) => { e.target.style.background = 'rgba(255, 215, 0, 0.2)'; e.target.style.color = '#FFD700'; }}
               >
                 {t('nav_logout')}
               </button>
             </>
           )}
-          {/* Show login link only on admin pages when not authenticated */}
           {isAdminPage && requireAuth && !user && (
             <Link to="/login" style={{ color: '#FFD700', textDecoration: 'none', fontWeight: 'bold', fontSize: '0.95rem' }}>
               Login
