@@ -71,7 +71,7 @@ export default function Navigation() {
         </ul>
 
         {/* Right side controls */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap', justifyContent: 'flex-end' }} className="nav-controls">
           {/* Time Display - hidden on mobile via CSS */}
           <div className="nav-time" style={{
             display: 'flex',
@@ -90,6 +90,7 @@ export default function Navigation() {
           <select
             value={language}
             onChange={(e) => changeLanguage(e.target.value)}
+            className="nav-language-select"
             style={{
               background: 'rgba(255, 215, 0, 0.2)',
               color: '#FFD700',

@@ -372,9 +372,22 @@ footer p {
     border-bottom: 1px solid rgba(255,215,0,0.1);
   }
 
-  /* Hide time display on mobile */
+  /* Hide/Adjust controls on mobile */
+  .nav-controls {
+    gap: 0.5rem !important;
+  }
+
   .nav-time {
-    display: none;
+    display: none !important;
+  }
+
+  .nav-language-select {
+    padding: 0.4rem 0.5rem !important;
+    font-size: 0.8rem !important;
+  }
+
+  .admin-user {
+    display: none !important;
   }
 
   /* Hero */

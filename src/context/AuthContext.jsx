@@ -14,6 +14,18 @@ export function AuthProvider({ children }) {
 
   // Restore auth state from localStorage on mount
   useEffect(() => {
+    // If auth is required, don't auto-restore from localStorage for security
+    // Force a fresh login instead
+    if (requireAuth) {
+      console.log('Auth required - clearing any cached auth state for security');
+      localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
+      localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
+      setUser(null);
+      setIsAuthenticated(false);
+      return;
+    }
+
+    // Only restore auth state if auth is NOT required (no-auth mode)
     const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
     const savedUser = localStorage.getItem(STORAGE_KEYS.CURRENT_USER);
     
@@ -29,7 +41,7 @@ export function AuthProvider({ children }) {
         localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
       }
     }
-  }, []);
+  }, [requireAuth]);
 
   const login = useCallback(async (username, password) => {
     setLoading(true);

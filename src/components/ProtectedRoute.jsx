@@ -15,15 +15,9 @@ export default function ProtectedRoute({ children, requireAdmin = false }) {
     user: user?.name || 'No user'
   });
 
-  // If authentication is not required (NO-AUTH mode), allow access to everything
-  if (!requireAuth) {
-    console.log('NO-AUTH mode - allowing access');
-    return children;
-  }
-
-  // If this is an admin route (requireAdmin = true), enforce authentication and admin role
+  // Admin routes ALWAYS require authentication, regardless of environment
   if (requireAdmin) {
-    // Admin routes always require authentication in AUTH mode
+    // Admin routes always require authentication
     if (!isAuthenticated) {
       console.log('Admin route - user not authenticated, redirecting to login');
       return <Navigate to="/login" state={{ from: location.pathname }} replace />;
@@ -35,6 +29,12 @@ export default function ProtectedRoute({ children, requireAdmin = false }) {
     }
     // User is authenticated and is admin
     console.log('Admin route - user is authenticated and is admin, allowing access');
+    return children;
+  }
+
+  // For non-admin routes: If authentication is not required (NO-AUTH mode), allow access
+  if (!requireAuth) {
+    console.log('NO-AUTH mode - allowing access to non-admin route');
     return children;
   }
 
