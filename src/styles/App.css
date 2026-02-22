@@ -8,17 +8,19 @@ body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   line-height: 1.6;
   color: #333;
-  background: #fff;
+  background: linear-gradient(180deg, #FF8C42 0%, #FF6B35 25%, #F7931E 50%, #FFB84D 75%, #FF8C42 100%);
+  background-attachment: fixed;
+  min-height: 100vh;
 }
 
 /* Navigation */
 nav {
-  background: linear-gradient(135deg, #0B1C3F 0%, #112A57 100%);
+  background: linear-gradient(135deg, #2C3E50 0%, #34495E 100%);
   padding: 1rem 0;
   position: sticky;
   top: 0;
   z-index: 1000;
-  box-shadow: 0 4px 15px rgba(11, 28, 63, 0.3);
+  box-shadow: 0 4px 15px rgba(44, 62, 80, 0.4);
 }
 
 nav .nav-container {
@@ -33,14 +35,14 @@ nav .nav-container {
 nav .logo {
   font-size: 1.5rem;
   font-weight: bold;
-  color: #E6B325;
+  color: #FFD700;
   text-decoration: none;
   letter-spacing: 1px;
   transition: color 0.3s ease;
 }
 
 nav .logo:hover {
-  color: #fff;
+  color: #FFF;
 }
 
 nav ul {
@@ -50,7 +52,7 @@ nav ul {
 }
 
 nav a {
-  color: #b0c4de;
+  color: #ECF0F1;
   text-decoration: none;
   font-weight: 500;
   transition: all 0.3s ease;
@@ -61,9 +63,9 @@ nav a {
 }
 
 nav a:hover {
-  color: #E6B325;
-  background-color: rgba(230, 179, 37, 0.1);
-  border-bottom: 2px solid #E6B325;
+  color: #FFD700;
+  background-color: rgba(255, 215, 0, 0.2);
+  border-bottom: 2px solid #FFD700;
 }
 
 /* Main Container */
@@ -71,14 +73,21 @@ nav a:hover {
   max-width: 1200px;
   margin: 0 auto;
   padding: 2rem;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(139, 69, 19, 0.2);
+  margin-top: 2rem;
+  margin-bottom: 2rem;
 }
 
 /* Hero Section */
 .hero {
   color: white;
   padding: 6rem 2rem;
-  border-radius: 0;
-  margin-bottom: 0;
+  border-radius: 12px;
+  margin-bottom: 2rem;
+  background: linear-gradient(135deg, rgba(139, 69, 19, 0.9) 0%, rgba(160, 82, 45, 0.9) 100%);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
 }
 
 .hero h1 {
@@ -101,16 +110,18 @@ nav a:hover {
 }
 
 .card {
-  background: white;
+  background: rgba(255, 255, 255, 0.98);
   border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 16px rgba(139, 69, 19, 0.15);
   overflow: hidden;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border: 2px solid rgba(255, 215, 0, 0.3);
 }
 
 .card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 12px 32px rgba(139, 69, 19, 0.25);
+  border-color: rgba(255, 215, 0, 0.6);
 }
 
 .card-image {
@@ -125,6 +136,7 @@ nav a:hover {
 
 .card-content {
   padding: 1.5rem;
+  background: white;
 }
 
 .card-content h3 {
@@ -141,19 +153,22 @@ nav a:hover {
 .btn {
   display: inline-block;
   padding: 0.75rem 1.5rem;
-  background: #8b4513;
+  background: linear-gradient(135deg, #8b4513 0%, #a0522d 100%);
   color: white;
   text-decoration: none;
   border: none;
   border-radius: 4px;
   cursor: pointer;
   font-size: 1rem;
-  transition: background 0.3s ease;
+  transition: all 0.3s ease;
   margin-top: 1rem;
+  box-shadow: 0 4px 12px rgba(139, 69, 19, 0.3);
 }
 
 .btn:hover {
-  background: #a0522d;
+  background: linear-gradient(135deg, #a0522d 0%, #b8651f 100%);
+  box-shadow: 0 6px 20px rgba(139, 69, 19, 0.4);
+  transform: translateY(-2px);
 }
 
 .btn-secondary {
@@ -168,17 +183,19 @@ nav a:hover {
 .table-container {
   overflow-x: auto;
   margin: 2rem 0;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(139, 69, 19, 0.1);
 }
 
 table {
   width: 100%;
   border-collapse: collapse;
   background: white;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 table thead {
-  background: #8b4513;
+  background: linear-gradient(135deg, #8b4513 0%, #a0522d 100%);
   color: white;
 }
 
@@ -196,6 +213,12 @@ table tbody tr:hover {
 .page {
   min-height: calc(100vh - 200px);
   animation: fadeIn 0.3s ease;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 2rem;
+  border-radius: 12px;
+  margin: 2rem auto;
+  max-width: 1200px;
+  box-shadow: 0 8px 32px rgba(139, 69, 19, 0.2);
 }
 
 @keyframes fadeIn {
@@ -211,18 +234,18 @@ table tbody tr:hover {
 
 /* Footer */
 footer {
-  background: linear-gradient(135deg, #0B1C3F 0%, #112A57 100%);
+  background: linear-gradient(135deg, #2C3E50 0%, #34495E 100%);
   color: white;
   text-align: center;
   padding: 2.5rem;
   margin-top: 3rem;
-  border-top: 3px solid #E6B325;
-  box-shadow: 0 -4px 15px rgba(11, 28, 63, 0.3);
+  border-top: 3px solid #3498DB;
+  box-shadow: 0 -4px 15px rgba(44, 62, 80, 0.4);
 }
 
 footer p {
   margin-bottom: 0.75rem;
-  color: #b0c4de;
+  color: #ECF0F1;
 }
 
 /* Responsive */

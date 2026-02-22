@@ -7,7 +7,7 @@
 const STORAGE_KEYS = {
   EVENTS: 'temple_events',
   SERVICES: 'temple_services',
-  STAFF: 'temple_staff',
+  STAFF: 'staff',  // Changed from 'temple_staff' to 'staff'
   BOARD_MEMBERS: 'temple_board_members',
   TIMINGS: 'temple_timings',
   DONORS: 'temple_donors',
@@ -104,6 +104,52 @@ const initializeDefaultData = () => {
       }
     ];
     saveToStorage(STORAGE_KEYS.SERVICES, defaultServices);
+  }
+
+  // Initialize Staff if empty
+  if (!localStorage.getItem(STORAGE_KEYS.STAFF)) {
+    const defaultStaff = [
+      {
+        id: generateId(),
+        fullName: 'Pandit Rajesh Kumar',
+        name: 'Pandit Rajesh Kumar',
+        position: 'Head Priest',
+        email: 'rajesh@temple.com',
+        phoneNumber: '+91-9876543210',
+        phone: '+91-9876543210',
+        experience: 15,
+        description: 'Senior priest with 15 years of experience in conducting Hindu rituals and ceremonies',
+        profileImageUrl: null,
+        createdAt: new Date().toISOString()
+      },
+      {
+        id: generateId(),
+        fullName: 'Priya Singh',
+        name: 'Priya Singh',
+        position: 'Temple Manager',
+        email: 'priya@temple.com',
+        phoneNumber: '+91-9876543211',
+        phone: '+91-9876543211',
+        experience: 8,
+        description: 'Experienced temple manager overseeing daily operations and administrative tasks',
+        profileImageUrl: null,
+        createdAt: new Date().toISOString()
+      },
+      {
+        id: generateId(),
+        fullName: 'Suresh Patel',
+        name: 'Suresh Patel',
+        position: 'Accountant',
+        email: 'suresh@temple.com',
+        phoneNumber: '+91-9876543212',
+        phone: '+91-9876543212',
+        experience: 10,
+        description: 'Certified accountant managing temple finances and donation records',
+        profileImageUrl: null,
+        createdAt: new Date().toISOString()
+      }
+    ];
+    saveToStorage(STORAGE_KEYS.STAFF, defaultStaff);
   }
 
   // Initialize Timings if empty
@@ -368,6 +414,8 @@ export const servicesAPI = {
 export const staffAPI = {
   getAll: async (params = {}) => {
     const staff = getFromStorage(STORAGE_KEYS.STAFF, []);
+    console.log('[staffAPI.getAll] Retrieved staff from localStorage:', staff);
+    console.log('[staffAPI.getAll] Staff count:', staff.length);
     return Promise.resolve({ data: staff });
   },
 
@@ -378,31 +426,67 @@ export const staffAPI = {
   },
 
   create: async (staffData) => {
+    console.log('[staffAPI.create] Creating staff with data:', staffData);
     const staff = getFromStorage(STORAGE_KEYS.STAFF, []);
+    console.log('[staffAPI.create] Current staff before create:', staff);
+    
     const newMember = {
       id: generateId(),
       ...staffData,
       createdAt: new Date().toISOString()
     };
+    
     staff.push(newMember);
-    saveToStorage(STORAGE_KEYS.STAFF, staff);
+    console.log('[staffAPI.create] Staff after adding new member:', staff);
+    
+    const saved = saveToStorage(STORAGE_KEYS.STAFF, staff);
+    console.log('[staffAPI.create] Save to storage result:', saved);
+    
+    // Verify it was saved
+    const verification = getFromStorage(STORAGE_KEYS.STAFF, []);
+    console.log('[staffAPI.create] Verification - staff in storage after save:', verification);
+    
+    // Dispatch custom event to notify all pages
+    window.dispatchEvent(new CustomEvent('staffDataUpdated', { detail: { staff } }));
+    
     return Promise.resolve({ data: newMember });
   },
 
   update: async (id, staffData) => {
+    console.log('[staffAPI.update] Updating staff ID:', id, 'with data:', staffData);
     const staff = getFromStorage(STORAGE_KEYS.STAFF, []);
     const index = staff.findIndex(s => s.id === id);
-    if (index === -1) return Promise.reject(new Error('Staff member not found'));
+    if (index === -1) {
+      console.error('[staffAPI.update] Staff member not found:', id);
+      return Promise.reject(new Error('Staff member not found'));
+    }
     
     staff[index] = { ...staff[index], ...staffData, updatedAt: new Date().toISOString() };
+    console.log('[staffAPI.update] Updated staff array:', staff);
+    
     saveToStorage(STORAGE_KEYS.STAFF, staff);
+    console.log('[staffAPI.update] Saved to storage');
+    
+    // Dispatch custom event to notify all pages
+    window.dispatchEvent(new CustomEvent('staffDataUpdated', { detail: { staff } }));
+    
     return Promise.resolve({ data: staff[index] });
   },
 
   delete: async (id) => {
+    console.log('[staffAPI.delete] Deleting staff ID:', id);
     const staff = getFromStorage(STORAGE_KEYS.STAFF, []);
+    console.log('[staffAPI.delete] Current staff before delete:', staff);
+    
     const filtered = staff.filter(s => s.id !== id);
+    console.log('[staffAPI.delete] Staff after filtering:', filtered);
+    
     saveToStorage(STORAGE_KEYS.STAFF, filtered);
+    console.log('[staffAPI.delete] Saved to storage');
+    
+    // Dispatch custom event to notify all pages
+    window.dispatchEvent(new CustomEvent('staffDataUpdated', { detail: { staff: filtered } }));
+    
     return Promise.resolve({ data: { message: 'Staff member deleted successfully' } });
   }
 };

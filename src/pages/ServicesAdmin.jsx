@@ -16,7 +16,12 @@ const translations = {
     serviceName: 'Service Name',
     description: 'Description',
     price: 'Price',
-    icon: 'Icon (Emoji)',
+    icon: 'Icon/Image',
+    iconHelp: 'Upload an image or enter emoji',
+    uploadImage: 'Upload Image',
+    currentImage: 'Current Image',
+    removeImage: 'Remove Image',
+    orUseEmoji: 'Or use emoji',
     details: 'Details (one per line)',
     loading: 'Loading...',
     error: 'Error',
@@ -94,6 +99,8 @@ export default function ServicesAdmin() {
     icon: '🙏',
     details: ''
   });
+  const [originalData, setOriginalData] = useState(null); // Store original data for comparison
+  const [imagePreview, setImagePreview] = useState(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
 
   useEffect(() => {
@@ -121,6 +128,24 @@ export default function ServicesAdmin() {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result;
+        setFormData(prev => ({ ...prev, icon: base64String }));
+        setImagePreview(base64String);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setFormData(prev => ({ ...prev, icon: '🙏' }));
+    setImagePreview(null);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -137,6 +162,26 @@ export default function ServicesAdmin() {
         icon: formData.icon || '🙏',
         details: detailsArray
       };
+
+      // Check if editing and nothing has changed
+      if (editingId && originalData) {
+        const originalDetailsArray = originalData.details
+          .split('\n')
+          .map(d => d.trim())
+          .filter(d => d);
+        
+        const hasChanges = 
+          formData.name !== originalData.name ||
+          formData.description !== originalData.description ||
+          formData.price !== originalData.price ||
+          formData.icon !== originalData.icon ||
+          JSON.stringify(detailsArray) !== JSON.stringify(originalDetailsArray);
+
+        if (!hasChanges) {
+          alert('⚠️ No changes detected. Please modify the service details before saving.');
+          return;
+        }
+      }
 
       console.log('editingId:', editingId);
       console.log('serviceData:', serviceData);
@@ -184,6 +229,20 @@ export default function ServicesAdmin() {
       icon: service.icon || '🙏',
       details: detailsString
     });
+    // Store original data for comparison
+    setOriginalData({
+      name: service.name || '',
+      description: service.description || '',
+      price: service.price || '',
+      icon: service.icon || '🙏',
+      details: detailsString
+    });
+    // Set image preview if icon is a data URL or image path
+    if (service.icon && (service.icon.startsWith('data:') || service.icon.startsWith('http') || service.icon.startsWith('/images'))) {
+      setImagePreview(service.icon);
+    } else {
+      setImagePreview(null);
+    }
     setShowForm(true);
     console.log('editingId set to:', service.id); // Debug log
   };
@@ -207,7 +266,9 @@ export default function ServicesAdmin() {
       icon: '🙏',
       details: ''
     });
+    setImagePreview(null);
     setEditingId(null);
+    setOriginalData(null); // Clear original data
     setShowForm(false);
   };
 
@@ -247,6 +308,10 @@ export default function ServicesAdmin() {
       </div>
     );
   }
+
+  const isImageIcon = (icon) => {
+    return icon && (icon.startsWith('data:') || icon.startsWith('http') || icon.startsWith('/images'));
+  };
 
   return (
     <div style={{ padding: '40px 20px', minHeight: '70vh', backgroundColor: '#f9f9f9' }}>
@@ -346,25 +411,76 @@ export default function ServicesAdmin() {
                     }}
                   />
                 </div>
+              </div>
+
+              {/* Image/Icon Upload Section */}
+              <div style={{ marginBottom: '15px' }}>
+                <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>
+                  {t.icon}
+                  <span style={{ fontSize: '12px', color: '#666', fontWeight: 'normal', marginLeft: '8px' }}>
+                    ({t.iconHelp})
+                  </span>
+                </label>
+                
+                {/* Image Preview */}
+                {imagePreview && (
+                  <div style={{ marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <div style={{
+                      width: '80px',
+                      height: '80px',
+                      border: '2px solid #ddd',
+                      borderRadius: '8px',
+                      overflow: 'hidden',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      backgroundColor: '#f5f5f5'
+                    }}>
+                      <img 
+                        src={imagePreview} 
+                        alt="Preview" 
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleRemoveImage}
+                      style={{
+                        padding: '8px 16px',
+                        backgroundColor: '#d32f2f',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        fontSize: '13px',
+                        fontWeight: '500'
+                      }}
+                    >
+                      {t.removeImage}
+                    </button>
+                  </div>
+                )}
+
+                {/* File Upload */}
                 <div>
-                  <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>
-                    {t.icon}
+                  <label style={{
+                    display: 'inline-block',
+                    padding: '10px 20px',
+                    backgroundColor: '#0B1C3F',
+                    color: 'white',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    fontWeight: '500'
+                  }}>
+                    📤 {t.uploadImage}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      style={{ display: 'none' }}
+                    />
                   </label>
-                  <input
-                    type="text"
-                    name="icon"
-                    value={formData.icon}
-                    onChange={handleInputChange}
-                    placeholder="🙏"
-                    style={{
-                      width: '100%',
-                      padding: '10px',
-                      border: '1px solid #ddd',
-                      borderRadius: '4px',
-                      fontSize: '14px',
-                      boxSizing: 'border-box'
-                    }}
-                  />
                 </div>
               </div>
 
@@ -477,22 +593,60 @@ export default function ServicesAdmin() {
                   borderRadius: '8px',
                   overflow: 'hidden',
                   boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-                  transition: 'transform 0.3s ease'
+                  transition: 'transform 0.3s ease, box-shadow 0.3s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-5px)';
+                  e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.15)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
                 }}
               >
-                <div style={{
-                  padding: '20px',
-                  background: 'linear-gradient(135deg, #0B1C3F 0%, #112A57 100%)',
-                  color: 'white',
-                  textAlign: 'center'
-                }}>
-                  <div style={{ fontSize: '3rem', marginBottom: '10px' }}>
+                {/* Service Image/Icon */}
+                {isImageIcon(service.icon) ? (
+                  <div style={{ 
+                    width: '100%', 
+                    height: '220px', 
+                    overflow: 'hidden',
+                    backgroundColor: '#f5e6d3'
+                  }}>
+                    <img 
+                      src={service.icon} 
+                      alt={service.name}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover'
+                      }}
+                    />
+                  </div>
+                ) : (
+                  <div style={{
+                    width: '100%',
+                    height: '220px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '4rem',
+                    backgroundColor: '#f5e6d3',
+                    color: '#0B1C3F'
+                  }}>
                     {service.icon || '🙏'}
                   </div>
-                  <h3 style={{ margin: '0' }}>{service.name}</h3>
-                </div>
+                )}
 
                 <div style={{ padding: '20px' }}>
+                  <h3 style={{ 
+                    margin: '0 0 10px 0',
+                    color: '#0B1C3F',
+                    fontSize: '1.3rem',
+                    fontWeight: '600'
+                  }}>
+                    {service.name}
+                  </h3>
+
                   <p style={{ margin: '0 0 10px 0', color: '#E6B325', fontSize: '18px', fontWeight: 'bold' }}>
                     💰 {service.price}
                   </p>

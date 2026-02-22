@@ -1,6 +1,6 @@
 @echo off
-echo Starting Raja Rajeshwara Devastanam - DEV (With Auth)
+echo Starting Raja Rajeshwara Devastanam - DEV (NO-AUTH Mode)
 echo.
-set REACT_APP_ENV=dev
+set REACT_APP_ENV=no-auth
 cd /d "%~dp0"
 call npm start

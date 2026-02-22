@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -8,9 +8,35 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login, requireAuth, environment } = useAuth();
+  const { login, requireAuth, environment, isAuthenticated, user } = useAuth();
   const { t } = useLanguage();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Redirect logic to prevent users from accidentally landing on login page
+  useEffect(() => {
+    // If user is already authenticated and is an admin, redirect to admin home
+    if (isAuthenticated && user?.role === 'admin') {
+      navigate('/home/admin', { replace: true });
+      return;
+    }
+
+    // If user is already authenticated but not an admin, redirect to user home
+    if (isAuthenticated && user?.role !== 'admin') {
+      navigate('/home', { replace: true });
+      return;
+    }
+
+    // If authentication is not required (local environment) and user directly accessed /login
+    // without coming from an admin route, redirect to home
+    if (!requireAuth && !location.state?.from) {
+      // Give a brief moment to show a message, then redirect
+      const timer = setTimeout(() => {
+        navigate('/home', { replace: true });
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [isAuthenticated, user, requireAuth, navigate, location]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -21,13 +47,74 @@ export default function Login() {
     setLoading(false);
 
     if (result.success) {
-      navigate('/home/admin');
+      // Redirect to the page they were trying to access, or admin home
+      const from = location.state?.from || '/home/admin';
+      navigate(from);
     } else {
       setError(result.message);
     }
   };
 
   const isSubmitDisabled = requireAuth ? loading || !username.trim() || !password : loading;
+
+  // Show a redirect message for non-auth environments
+  if (!requireAuth && !location.state?.from) {
+    return (
+      <div
+        style={{
+          minHeight: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: 'linear-gradient(135deg, #8b4513 0%, #a0522d 100%)'
+        }}
+      >
+        <div
+          style={{
+            background: 'white',
+            padding: '2rem',
+            borderRadius: '8px',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+            maxWidth: '400px',
+            width: '100%',
+            textAlign: 'center'
+          }}
+        >
+          <h1 style={{ color: '#8b4513', marginBottom: '1rem' }}>🏛️ {t('home_title')}</h1>
+          <div
+            style={{
+              background: '#e3f2fd',
+              padding: '1.5rem',
+              borderRadius: '4px',
+              marginBottom: '1rem',
+              color: '#1565c0',
+              fontSize: '1rem'
+            }}
+          >
+            <p style={{ marginBottom: '0.5rem' }}>ℹ️ Redirecting to home page...</p>
+            <p style={{ fontSize: '0.9rem', opacity: 0.8 }}>
+              Login is only required for admin access.
+            </p>
+          </div>
+          <button
+            onClick={() => navigate('/home')}
+            style={{
+              padding: '0.75rem 1.5rem',
+              background: '#8b4513',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '1rem',
+              fontWeight: 'bold'
+            }}
+          >
+            Go to Home Now
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -151,17 +238,11 @@ export default function Login() {
           </button>
         </form>
 
-        <div style={{ marginTop: '1.5rem', fontSize: '0.85rem', color: '#666', textAlign: 'center' }}>
-          {requireAuth ? (
-            <>
-              <p>{t('login_test_credentials')} {environment.toUpperCase()}:</p>
-              <p><strong>Username: admin</strong></p>
-              <p><strong>Password: admin123</strong></p>
-            </>
-          ) : (
+        {!requireAuth && (
+          <div style={{ marginTop: '1.5rem', fontSize: '0.85rem', color: '#666', textAlign: 'center' }}>
             <p>🔓 {t('login_no_auth')}</p>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );

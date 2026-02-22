@@ -280,7 +280,7 @@ export default function AdminHome() {
             <p style={{ color: '#7f8c8d', fontSize: '0.9rem' }}>Manage donor records and donations</p>
           </div>
 
-          {/* Dashboard Admin */}
+          {/* Daily Prayers Admin */}
           <div style={{
             background: 'white',
             border: '1px solid #ecf0f1',
@@ -299,11 +299,11 @@ export default function AdminHome() {
             e.currentTarget.style.transform = 'translateY(0)';
             e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
           }}
-          onClick={() => navigate('/admin/dashboard')}
+          onClick={() => navigate('/daily-prayers/admin')}
           >
-            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📊</div>
-            <h3 style={{ color: '#2c3e50', marginBottom: '0.5rem' }}>Dashboard</h3>
-            <p style={{ color: '#7f8c8d', fontSize: '0.9rem' }}>View comprehensive admin statistics</p>
+            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🙏</div>
+            <h3 style={{ color: '#2c3e50', marginBottom: '0.5rem' }}>Daily Prayers</h3>
+            <p style={{ color: '#7f8c8d', fontSize: '0.9rem' }}>Manage daily prayer schedules</p>
           </div>
         </div>
       </div>

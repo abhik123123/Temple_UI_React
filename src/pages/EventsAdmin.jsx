@@ -136,6 +136,7 @@ export default function EventsAdmin() {
     imageUrl: '',
     imageFile: null
   });
+  const [originalData, setOriginalData] = useState(null); // Store original data for comparison
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
   const [showRegistrationsModal, setShowRegistrationsModal] = useState(false);
   const [selectedEventRegistrations, setSelectedEventRegistrations] = useState(null);
@@ -290,6 +291,36 @@ export default function EventsAdmin() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Validate that end time is not earlier than start time
+    if (formData.startTime && formData.endTime) {
+      const startMinutes = parseInt(formData.startTime.split(':')[0]) * 60 + parseInt(formData.startTime.split(':')[1]);
+      const endMinutes = parseInt(formData.endTime.split(':')[0]) * 60 + parseInt(formData.endTime.split(':')[1]);
+      
+      if (endMinutes < startMinutes) {
+        alert('End time cannot be earlier than start time. Please check the times and try again.');
+        return;
+      }
+    }
+
+    // Check if editing and nothing has changed
+    if (editingId && originalData) {
+      const hasChanges = 
+        formData.title !== originalData.title ||
+        formData.date !== originalData.date ||
+        formData.startTime !== originalData.startTime ||
+        formData.endTime !== originalData.endTime ||
+        formData.location !== originalData.location ||
+        formData.description !== originalData.description ||
+        formData.category !== originalData.category ||
+        formData.imageFile !== null; // New image uploaded
+
+      if (!hasChanges) {
+        alert('⚠️ No changes detected. Please modify the event details before saving.');
+        return;
+      }
+    }
+    
     try {
       // Prepare FormData for multipart submission when image is present
       let submitData;
@@ -378,6 +409,17 @@ export default function EventsAdmin() {
       imageUrl: event.imageUrl || '',
       imageFile: null
     });
+    // Store original data for comparison
+    setOriginalData({
+      title: event.title || '',
+      date: event.date || '',
+      startTime: event.startTime || '',
+      endTime: event.endTime || '',
+      location: event.location || '',
+      description: event.description || '',
+      category: event.category || 'Festival',
+      imageUrl: event.imageUrl || ''
+    });
     setEditingId(event.id);
     setShowForm(true);
   };
@@ -404,6 +446,7 @@ export default function EventsAdmin() {
       imageUrl: '',
       imageFile: null
     });
+    setOriginalData(null); // Clear original data
     setEditingId(null);
     setShowForm(false);
   };
@@ -512,52 +555,41 @@ export default function EventsAdmin() {
         {/* Form Modal */}
         {showForm && (
           <div style={{
-            backgroundColor: 'white',
-            padding: '30px',
-            borderRadius: '8px',
-            marginBottom: '30px',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 1000,
+            padding: '20px'
           }}>
-            <h2 style={{ color: '#0B1C3F', marginBottom: '20px', marginTop: 0 }}>
-              {editingId ? t.editEvent : t.addEvent}
-            </h2>
+            <div style={{
+              backgroundColor: 'white',
+              borderRadius: '8px',
+              padding: '30px',
+              maxWidth: '600px',
+              width: '100%',
+              maxHeight: '90vh',
+              overflowY: 'auto',
+              boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
+            }}>
+              <h2 style={{ color: '#0B1C3F', marginBottom: '20px', marginTop: 0 }}>
+                {editingId ? t.editEvent : t.addEvent}
+              </h2>
 
-            <form onSubmit={handleSubmit}>
-              <div style={{ marginBottom: '15px' }}>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>
-                  {t.eventTitle}
-                </label>
-                <input
-                  type="text"
-                  name="title"
-                  value={formData.title}
-                  onChange={handleInputChange}
-                  required
-                  style={{
-                    width: '100%',
-                    padding: '10px',
-                    border: '1px solid #ddd',
-                    borderRadius: '4px',
-                    fontSize: '14px',
-                    boxSizing: 'border-box'
-                  }}
-                />
-              </div>
-
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 1fr',
-                gap: '15px',
-                marginBottom: '15px'
-              }}>
-                <div>
+              <form onSubmit={handleSubmit}>
+                <div style={{ marginBottom: '15px' }}>
                   <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>
-                    {t.date}
+                    {t.eventTitle}
                   </label>
                   <input
-                    type="date"
-                    name="date"
-                    value={formData.date}
+                    type="text"
+                    name="title"
+                    value={formData.title}
                     onChange={handleInputChange}
                     required
                     style={{
@@ -570,196 +602,224 @@ export default function EventsAdmin() {
                     }}
                   />
                 </div>
-                <div>
-                  <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>
-                    {t.category}
-                  </label>
-                  <select
-                    name="category"
-                    value={formData.category}
-                    onChange={handleInputChange}
-                    style={{
-                      width: '100%',
-                      padding: '10px',
-                      border: '1px solid #ddd',
-                      borderRadius: '4px',
-                      fontSize: '14px',
-                      boxSizing: 'border-box'
-                    }}
-                  >
-                    <option>Festival</option>
-                    <option>Religious</option>
-                    <option>Cultural</option>
-                    <option>Community</option>
-                    <option>Celebration</option>
-                  </select>
-                </div>
-              </div>
 
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 1fr',
-                gap: '15px',
-                marginBottom: '15px'
-              }}>
-                <div>
-                  <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>
-                    {t.startTime}
-                  </label>
-                  <input
-                    type="time"
-                    name="startTime"
-                    value={formData.startTime}
-                    onChange={handleInputChange}
-                    style={{
-                      width: '100%',
-                      padding: '10px',
-                      border: '1px solid #ddd',
-                      borderRadius: '4px',
-                      fontSize: '14px',
-                      boxSizing: 'border-box'
-                    }}
-                  />
-                </div>
-                <div>
-                  <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>
-                    {t.endTime}
-                  </label>
-                  <input
-                    type="time"
-                    name="endTime"
-                    value={formData.endTime}
-                    onChange={handleInputChange}
-                    style={{
-                      width: '100%',
-                      padding: '10px',
-                      border: '1px solid #ddd',
-                      borderRadius: '4px',
-                      fontSize: '14px',
-                      boxSizing: 'border-box'
-                    }}
-                  />
-                </div>
-              </div>
-
-              <div style={{ marginBottom: '15px' }}>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>
-                  {t.location}
-                </label>
-                <input
-                  type="text"
-                  name="location"
-                  value={formData.location}
-                  onChange={handleInputChange}
-                  style={{
-                    width: '100%',
-                    padding: '10px',
-                    border: '1px solid #ddd',
-                    borderRadius: '4px',
-                    fontSize: '14px',
-                    boxSizing: 'border-box'
-                  }}
-                />
-              </div>
-
-              <div style={{ marginBottom: '20px' }}>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>
-                  {t.description}
-                </label>
-                <textarea
-                  name="description"
-                  value={formData.description}
-                  onChange={handleInputChange}
-                  rows="4"
-                  style={{
-                    width: '100%',
-                    padding: '10px',
-                    border: '1px solid #ddd',
-                    borderRadius: '4px',
-                    fontSize: '14px',
-                    boxSizing: 'border-box',
-                    fontFamily: 'inherit'
-                  }}
-                />
-              </div>
-
-              <div style={{ marginBottom: '20px' }}>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>
-                  📸 Event Photo / Image
-                </label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageChange}
-                  title="Upload any image format: JPG, PNG, WebP, GIF, BMP, TIFF, SVG, etc."
-                  style={{
-                    width: '100%',
-                    padding: '10px',
-                    border: '2px dashed #E6B325',
-                    borderRadius: '4px',
-                    fontSize: '14px',
-                    boxSizing: 'border-box',
-                    cursor: 'pointer'
-                  }}
-                />
-                <p style={{ fontSize: '11px', color: '#999', marginTop: '5px', marginBottom: '10px' }}>
-                  ✓ Supports all image formats: JPG, JPEG, PNG, WebP, GIF, BMP, TIFF, SVG, ICO, etc.
-                </p>
-                {formData.imageUrl && (
-                  <div style={{ marginTop: '10px' }}>
-                    <p style={{ fontSize: '12px', color: '#666', marginBottom: '5px' }}>Preview:</p>
-                    <img 
-                      src={formData.imageUrl} 
-                      alt="Event preview" 
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 1fr',
+                  gap: '15px',
+                  marginBottom: '15px'
+                }}>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>
+                      {t.date}
+                    </label>
+                    <input
+                      type="date"
+                      name="date"
+                      value={formData.date}
+                      onChange={handleInputChange}
+                      required
                       style={{
-                        maxWidth: '100%',
-                        maxHeight: '200px',
+                        width: '100%',
+                        padding: '10px',
+                        border: '1px solid #ddd',
                         borderRadius: '4px',
-                        border: '1px solid #ddd'
+                        fontSize: '14px',
+                        boxSizing: 'border-box'
                       }}
                     />
                   </div>
-                )}
-              </div>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>
+                      {t.category}
+                    </label>
+                    <select
+                      name="category"
+                      value={formData.category}
+                      onChange={handleInputChange}
+                      style={{
+                        width: '100%',
+                        padding: '10px',
+                        border: '1px solid #ddd',
+                        borderRadius: '4px',
+                        fontSize: '14px',
+                        boxSizing: 'border-box'
+                      }}
+                    >
+                      <option>Festival</option>
+                      <option>Religious</option>
+                      <option>Cultural</option>
+                      <option>Community</option>
+                      <option>Celebration</option>
+                    </select>
+                  </div>
+                </div>
 
-              <div style={{ display: 'flex', gap: '10px' }}>
-                <button
-                  type="submit"
-                  style={{
-                    padding: '12px 24px',
-                    backgroundColor: '#0B1C3F',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    fontWeight: '500',
-                    transition: 'all 0.3s ease'
-                  }}
-                  onMouseEnter={e => e.target.style.opacity = '0.9'}
-                  onMouseLeave={e => e.target.style.opacity = '1'}
-                >
-                  {t.save}
-                </button>
-                <button
-                  type="button"
-                  onClick={resetForm}
-                  style={{
-                    padding: '12px 24px',
-                    backgroundColor: '#f5f5f5',
-                    color: '#333',
-                    border: '1px solid #ddd',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    fontWeight: '500',
-                    transition: 'all 0.3s ease'
-                  }}
-                  onMouseEnter={e => e.target.style.backgroundColor = '#e8e8e8'}
-                  onMouseLeave={e => e.target.style.backgroundColor = '#f5f5f5'}
-                >
-                  {t.cancel}
-                </button>
-              </div>
-            </form>
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 1fr',
+                  gap: '15px',
+                  marginBottom: '15px'
+                }}>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>
+                      {t.startTime}
+                    </label>
+                    <input
+                      type="time"
+                      name="startTime"
+                      value={formData.startTime}
+                      onChange={handleInputChange}
+                      style={{
+                        width: '100%',
+                        padding: '10px',
+                        border: '1px solid #ddd',
+                        borderRadius: '4px',
+                        fontSize: '14px',
+                        boxSizing: 'border-box'
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>
+                      {t.endTime}
+                    </label>
+                    <input
+                      type="time"
+                      name="endTime"
+                      value={formData.endTime}
+                      onChange={handleInputChange}
+                      style={{
+                        width: '100%',
+                        padding: '10px',
+                        border: '1px solid #ddd',
+                        borderRadius: '4px',
+                        fontSize: '14px',
+                        boxSizing: 'border-box'
+                      }}
+                    />
+                  </div>
+                </div>
+
+                <div style={{ marginBottom: '15px' }}>
+                  <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>
+                    {t.location}
+                  </label>
+                  <input
+                    type="text"
+                    name="location"
+                    value={formData.location}
+                    onChange={handleInputChange}
+                    style={{
+                      width: '100%',
+                      padding: '10px',
+                      border: '1px solid #ddd',
+                      borderRadius: '4px',
+                      fontSize: '14px',
+                      boxSizing: 'border-box'
+                    }}
+                  />
+                </div>
+
+                <div style={{ marginBottom: '20px' }}>
+                  <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>
+                    {t.description}
+                  </label>
+                  <textarea
+                    name="description"
+                    value={formData.description}
+                    onChange={handleInputChange}
+                    rows="4"
+                    style={{
+                      width: '100%',
+                      padding: '10px',
+                      border: '1px solid #ddd',
+                      borderRadius: '4px',
+                      fontSize: '14px',
+                      boxSizing: 'border-box',
+                      fontFamily: 'inherit'
+                    }}
+                  />
+                </div>
+
+                <div style={{ marginBottom: '20px' }}>
+                  <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>
+                    📸 Event Photo / Image
+                  </label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    title="Upload any image format: JPG, PNG, WebP, GIF, BMP, TIFF, SVG, etc."
+                    style={{
+                      width: '100%',
+                      padding: '10px',
+                      border: '2px dashed #E6B325',
+                      borderRadius: '4px',
+                      fontSize: '14px',
+                      boxSizing: 'border-box',
+                      cursor: 'pointer'
+                    }}
+                  />
+                  <p style={{ fontSize: '11px', color: '#999', marginTop: '5px', marginBottom: '10px' }}>
+                    ✓ Supports all image formats: JPG, JPEG, PNG, WebP, GIF, BMP, TIFF, SVG, ICO, etc.
+                  </p>
+                  {formData.imageUrl && (
+                    <div style={{ marginTop: '10px' }}>
+                      <p style={{ fontSize: '12px', color: '#666', marginBottom: '5px' }}>Preview:</p>
+                      <img 
+                        src={formData.imageUrl} 
+                        alt="Event preview" 
+                        style={{
+                          maxWidth: '100%',
+                          maxHeight: '200px',
+                          borderRadius: '4px',
+                          border: '1px solid #ddd'
+                        }}
+                      />
+                    </div>
+                  )}
+                </div>
+
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <button
+                    type="submit"
+                    style={{
+                      padding: '12px 24px',
+                      backgroundColor: '#0B1C3F',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontWeight: '500',
+                      transition: 'all 0.3s ease'
+                    }}
+                    onMouseEnter={e => e.target.style.opacity = '0.9'}
+                    onMouseLeave={e => e.target.style.opacity = '1'}
+                  >
+                    {t.save}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={resetForm}
+                    style={{
+                      padding: '12px 24px',
+                      backgroundColor: '#f5f5f5',
+                      color: '#333',
+                      border: '1px solid #ddd',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontWeight: '500',
+                      transition: 'all 0.3s ease'
+                    }}
+                    onMouseEnter={e => e.target.style.backgroundColor = '#e8e8e8'}
+                    onMouseLeave={e => e.target.style.backgroundColor = '#f5f5f5'}
+                  >
+                    {t.cancel}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         )}
 

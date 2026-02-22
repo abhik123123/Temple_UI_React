@@ -6,12 +6,21 @@ import { useNavigate } from 'react-router-dom';
 export default function Services() {
   const { t } = useLanguage();
   const [services, setServices] = useState([]);
+  const [imageErrors, setImageErrors] = useState(new Set());
   const navigate = useNavigate();
 
   useEffect(() => {
     // Load services from localStorage
     setServices(getAllServices());
   }, []);
+
+  const handleImageError = (serviceId) => {
+    setImageErrors(prev => new Set([...prev, serviceId]));
+  };
+
+  const isImageIcon = (icon) => {
+    return icon && (icon.startsWith('data:') || icon.startsWith('http') || icon.startsWith('/images'));
+  };
 
   return (
     <div style={{ backgroundColor: '#f9fafb', minHeight: '100vh' }}>
@@ -292,33 +301,71 @@ export default function Services() {
                   e.currentTarget.style.boxShadow = '0 4px 6px rgba(0,0,0,0.07)';
                 }}
               >
-                {/* Service Icon Header */}
-                <div style={{
-                  padding: '40px 25px',
-                  background: 'linear-gradient(135deg, #0B1C3F 0%, #1a3a6b 100%)',
-                  color: 'white',
-                  textAlign: 'center',
-                  position: 'relative'
-                }}>
-                  <div style={{
-                    fontSize: '4rem',
-                    marginBottom: '15px',
-                    filter: 'drop-shadow(2px 2px 4px rgba(0,0,0,0.2))'
+                {/* Service Image/Icon Header */}
+                {isImageIcon(service.icon) && !imageErrors.has(service.id) ? (
+                  <div style={{ 
+                    width: '100%', 
+                    height: '220px', 
+                    overflow: 'hidden',
+                    backgroundColor: '#f5e6d3'
                   }}>
-                    {service.icon || '🙏'}
+                    <img 
+                      src={service.icon} 
+                      alt={service.name}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover'
+                      }}
+                      onError={() => handleImageError(service.id)}
+                    />
                   </div>
-                  <h3 style={{ 
-                    margin: '0', 
-                    fontSize: '1.5rem',
-                    fontWeight: '600',
-                    lineHeight: '1.3'
+                ) : (
+                  <div style={{
+                    padding: '40px 25px',
+                    background: 'linear-gradient(135deg, #0B1C3F 0%, #1a3a6b 100%)',
+                    color: 'white',
+                    textAlign: 'center',
+                    position: 'relative',
+                    height: '220px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center'
                   }}>
-                    {service.name}
-                  </h3>
-                </div>
+                    <div style={{
+                      fontSize: '4rem',
+                      marginBottom: '15px',
+                      filter: 'drop-shadow(2px 2px 4px rgba(0,0,0,0.2))'
+                    }}>
+                      {service.icon || '🙏'}
+                    </div>
+                    <h3 style={{ 
+                      margin: '0', 
+                      fontSize: '1.5rem',
+                      fontWeight: '600',
+                      lineHeight: '1.3'
+                    }}>
+                      {service.name}
+                    </h3>
+                  </div>
+                )}
 
                 {/* Service Details */}
                 <div style={{ padding: '25px' }}>
+                  {/* Service Name (shown if image is displayed) */}
+                  {isImageIcon(service.icon) && !imageErrors.has(service.id) && (
+                    <h3 style={{ 
+                      margin: '0 0 15px 0', 
+                      fontSize: '1.5rem',
+                      fontWeight: '600',
+                      lineHeight: '1.3',
+                      color: '#0B1C3F'
+                    }}>
+                      {service.name}
+                    </h3>
+                  )}
+
                   {/* Price Badge */}
                   <div style={{
                     display: 'inline-block',

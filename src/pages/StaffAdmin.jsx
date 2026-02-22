@@ -1,11 +1,16 @@
 import { useState, useEffect } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
-import { staffAPI } from '../services/templeAPI';
+import { 
+  getAllStaff, 
+  addStaff, 
+  updateStaff, 
+  deleteStaff 
+} from '../services/staffData';
 
 const translations = {
   en: {
-    staff: 'Staff',
+    staff: 'Temple Staff',
     addStaff: 'Add Staff Member',
     editStaff: 'Edit Staff Member',
     deleteStaff: 'Delete Staff Member',
@@ -15,11 +20,14 @@ const translations = {
     edit: 'Edit',
     create: 'Create',
     name: 'Name',
-    position: 'Position',
+    fullName: 'Full Name',
+    role: 'Role',
+    department: 'Department',
     email: 'Email',
     phone: 'Phone',
-    experience: 'Experience (years)',
-    description: 'Description',
+    joiningDate: 'Joining Date',
+    responsibilities: 'Responsibilities',
+    yearsOfService: 'Years of Service',
     loading: 'Loading...',
     error: 'Error',
     success: 'Success',
@@ -30,7 +38,7 @@ const translations = {
     backToStaff: 'Back to Staff'
   },
   te: {
-    staff: 'సిబ్బంది',
+    staff: 'దేవాలయ సిబ్బంది',
     addStaff: 'సిబ్బంది సభ్యుడిని జోడించండి',
     editStaff: 'సిబ్బంది సభ్యుడిని సవరించండి',
     deleteStaff: 'సిబ్బంది సభ్యుడిని తొలగించండి',
@@ -40,11 +48,14 @@ const translations = {
     edit: 'సవరించండి',
     create: 'సృష్టించండి',
     name: 'పేరు',
-    position: 'స్థానం',
+    fullName: 'పూర్తి పేరు',
+    role: 'పాత్ర',
+    department: 'విభాగం',
     email: 'ఇమెయిల్',
     phone: 'ఫోన్',
-    experience: 'అనుభవం (సంవత్సరాలు)',
-    description: 'వివరణ',
+    joiningDate: 'చేరిన తేదీ',
+    responsibilities: 'బాధ్యతలు',
+    yearsOfService: 'సేవా సంవత్సరాలు',
     loading: 'లోడ్ చేస్తోంది...',
     error: 'లోపం',
     success: 'విజయం',
@@ -55,7 +66,7 @@ const translations = {
     backToStaff: 'సిబ్బందికి తిరిగి వెళ్లండి'
   },
   hi: {
-    staff: 'कर्मचारी',
+    staff: 'मंदिर कर्मचारी',
     addStaff: 'कर्मचारी सदस्य जोड़ें',
     editStaff: 'कर्मचारी सदस्य संपादित करें',
     deleteStaff: 'कर्मचारी सदस्य हटाएं',
@@ -65,19 +76,22 @@ const translations = {
     edit: 'संपादित करें',
     create: 'बनाएं',
     name: 'नाम',
-    position: 'पद',
+    fullName: 'पूरा नाम',
+    role: 'भूमिका',
+    department: 'विभाग',
     email: 'ईमेल',
     phone: 'फोन',
-    experience: 'अनुभव (वर्ष)',
-    description: 'विवरण',
+    joiningDate: 'शामिल होने की तारीख',
+    responsibilities: 'जिम्मेदारियां',
+    yearsOfService: 'सेवा के वर्ष',
     loading: 'लोड हो रहा है...',
     error: 'त्रुटि',
     success: 'सफलता',
-    noStaff: 'कोई कर्मचारी नहीं',
-    confirmDelete: 'क्या आप इस कर्मचारी को हटाना चाहते हैं?',
+    noStaff: 'कोई कर्मचारी सदस्य नहीं',
+    confirmDelete: 'क्या आप इस कर्मचारी सदस्य को हटाना चाहते हैं?',
     accessDenied: 'एक्सेस नकारा गया',
     adminOnly: 'केवल व्यवस्थापक इस पृष्ठ तक पहुंच सकते हैं',
-    backToStaff: 'कर्मचारी पर वापस जाएं'
+    backToStaff: 'कर्मचारियों पर वापस जाएं'
   }
 };
 
@@ -85,39 +99,33 @@ const translations = {
 const MOCK_STAFF = [
   {
     id: 1,
-    fullName: 'Pandit Rajesh Kumar',
-    name: 'Pandit Rajesh Kumar',
-    position: 'Head Priest',
-    email: 'rajesh@temple.com',
-    phoneNumber: '+91-9876543210',
-    phone: '+91-9876543210',
-    experience: 15,
-    description: 'Senior priest with 15 years of experience in conducting Hindu rituals and ceremonies',
-    profileImageUrl: null
+    fullName: 'Ramesh Kumar',
+    role: 'Temple Manager',
+    department: 'Administration',
+    email: 'ramesh@temple.com',
+    phone: '9876543210',
+    joiningDate: '2015-06-15',
+    responsibilities: 'Overall temple operations and daily management'
   },
   {
     id: 2,
-    fullName: 'Priya Singh',
-    name: 'Priya Singh',
-    position: 'Temple Manager',
-    email: 'priya@temple.com',
-    phoneNumber: '+91-9876543211',
-    phone: '+91-9876543211',
-    experience: 8,
-    description: 'Experienced temple manager overseeing daily operations and administrative tasks',
-    profileImageUrl: null
+    fullName: 'Lakshmi Devi',
+    role: 'Head Cook',
+    department: 'Kitchen',
+    email: 'lakshmi@temple.com',
+    phone: '9876543211',
+    joiningDate: '2018-03-20',
+    responsibilities: 'Manages prasadam preparation and kitchen operations'
   },
   {
     id: 3,
-    fullName: 'Suresh Patel',
-    name: 'Suresh Patel',
-    position: 'Accountant',
+    fullName: 'Suresh Reddy',
+    role: 'Maintenance Supervisor',
+    department: 'Maintenance',
     email: 'suresh@temple.com',
-    phoneNumber: '+91-9876543212',
-    phone: '+91-9876543212',
-    experience: 10,
-    description: 'Certified accountant managing temple finances and donation records',
-    profileImageUrl: null
+    phone: '9876543212',
+    joiningDate: '2017-09-10',
+    responsibilities: 'Oversees temple maintenance and repairs'
   }
 ];
 
@@ -131,19 +139,17 @@ export default function StaffAdmin() {
   const [error, setError] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
-  const [imagePreview, setImagePreview] = useState(null);
   const [formData, setFormData] = useState({
     fullName: '',
-    name: '',
-    position: '',
+    role: '',
     email: '',
-    phoneNumber: '',
     phone: '',
-    experience: '',
-    description: '',
+    joiningDate: '',
+    responsibilities: '',
     profileImageUrl: ''
   });
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
+  const [imagePreview, setImagePreview] = useState('');
 
   useEffect(() => {
     if (isAuthenticated && user?.role === 'admin') {
@@ -156,9 +162,9 @@ export default function StaffAdmin() {
   const fetchStaff = async () => {
     try {
       setLoading(true);
-      const data = await staffAPI.getAll();
-      const staffData = Array.isArray(data) ? data : data?.data || [];
-      setStaff(staffData.length > 0 ? staffData : MOCK_STAFF);
+      const data = await getAllStaff();
+      const staffList = Array.isArray(data) ? data : data?.data || [];
+      setStaff(staffList);
       setError(null);
     } catch (err) {
       console.warn('Backend not available, using mock data:', err.message);
@@ -169,106 +175,90 @@ export default function StaffAdmin() {
     }
   };
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ 
-      ...prev, 
-      [name]: value,
-      // Keep both name formats in sync
-      ...(name === 'fullName' && { name: value }),
-      ...(name === 'name' && { fullName: value }),
-      ...(name === 'phoneNumber' && { phone: value }),
-      ...(name === 'phone' && { phoneNumber: value })
-    }));
+  const calculateYearsOfService = (joiningDate) => {
+    if (!joiningDate) return 0;
+    const years = Math.floor((new Date() - new Date(joiningDate)) / (365.25 * 24 * 60 * 60 * 1000));
+    return years;
   };
 
-  const handleImageChange = (e) => {
+  const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        alert('Image size should be less than 5MB');
-        return;
-      }
-      if (!file.type.startsWith('image/')) {
-        alert('Please select an image file');
-        return;
-      }
       const reader = new FileReader();
       reader.onloadend = () => {
-        setImagePreview(reader.result);
-        setFormData(prev => ({ ...prev, profileImageUrl: reader.result }));
+        const base64String = reader.result;
+        setFormData(prev => ({ ...prev, profileImageUrl: base64String }));
+        setImagePreview(base64String);
       };
       reader.readAsDataURL(file);
     }
   };
 
+  const clearImage = () => {
+    setImagePreview('');
+    setFormData(prev => ({ ...prev, profileImageUrl: '' }));
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const submitData = {
-        fullName: formData.fullName || formData.name,
-        name: formData.fullName || formData.name,
-        position: formData.position,
-        email: formData.email,
-        phoneNumber: formData.phoneNumber || formData.phone,
-        phone: formData.phoneNumber || formData.phone,
-        experience: formData.experience,
-        description: formData.description,
-        profileImageUrl: formData.profileImageUrl
-      };
-
       if (editingId) {
-        await staffAPI.update(editingId, submitData);
+        await updateStaff(editingId, formData);
       } else {
-        await staffAPI.create(submitData);
+        await addStaff(formData);
       }
       fetchStaff();
       resetForm();
+      alert(t.success + '!');
     } catch (err) {
-      alert(err.response?.data?.message || t.error || 'Error saving staff member');
+      console.error('Error saving staff:', err);
+      alert(err.message || err.response?.data?.message || t.error);
     }
   };
 
-  const handleEdit = (staffMember) => {
+  const handleEdit = (member) => {
     setFormData({
-      fullName: staffMember.fullName || staffMember.name || '',
-      name: staffMember.fullName || staffMember.name || '',
-      position: staffMember.position || '',
-      email: staffMember.email || '',
-      phoneNumber: staffMember.phoneNumber || staffMember.phone || '',
-      phone: staffMember.phoneNumber || staffMember.phone || '',
-      experience: staffMember.experience || '',
-      description: staffMember.description || '',
-      profileImageUrl: staffMember.profileImageUrl || ''
+      fullName: member.fullName || '',
+      role: member.role || '',
+      email: member.email || '',
+      phone: member.phone || member.phoneNumber || '',
+      joiningDate: member.joiningDate || '',
+      responsibilities: member.responsibilities || '',
+      profileImageUrl: member.profileImageUrl || ''
     });
-    setImagePreview(staffMember.profileImageUrl || null);
-    setEditingId(staffMember.id);
+    setImagePreview(member.profileImageUrl || '');
+    setEditingId(member.id);
     setShowForm(true);
   };
 
   const handleDelete = async (id) => {
     try {
-      await staffAPI.delete(id);
+      await deleteStaff(id);
       fetchStaff();
       setShowDeleteConfirm(null);
+      alert(t.success + '!');
     } catch (err) {
-      alert(err.response?.data?.message || t.error || 'Error deleting staff member');
+      console.error('Error deleting staff:', err);
+      alert(err.message || err.response?.data?.message || t.error);
     }
   };
 
   const resetForm = () => {
     setFormData({
       fullName: '',
-      name: '',
-      position: '',
+      role: '',
       email: '',
-      phoneNumber: '',
       phone: '',
-      experience: '',
-      description: '',
+      joiningDate: '',
+      responsibilities: '',
       profileImageUrl: ''
     });
-    setImagePreview(null);
+    setImagePreview('');
     setEditingId(null);
     setShowForm(false);
   };
@@ -276,28 +266,13 @@ export default function StaffAdmin() {
   if (loading) {
     return (
       <div style={{ padding: '40px 20px', textAlign: 'center', minHeight: '60vh' }}>
-        <div style={{
-          display: 'inline-block',
-          width: '50px',
-          height: '50px',
-          border: '5px solid #f3f3f3',
-          borderTop: '5px solid #0B1C3F',
-          borderRadius: '50%',
-          animation: 'spin 1s linear infinite'
-        }}></div>
-        <p style={{ fontSize: '18px', color: '#666', marginTop: '20px' }}>{t.loading}</p>
-        <style>{`
-          @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-          }
-        `}</style>
+        <p>{t.loading}</p>
       </div>
     );
   }
 
   // Check admin access
-  if (!isAuthenticated || user?.role !== 'admin') {
+  if (isAuthenticated && user?.role !== 'admin') {
     return (
       <div style={{
         padding: '40px 20px',
@@ -308,8 +283,8 @@ export default function StaffAdmin() {
         alignItems: 'center',
         textAlign: 'center'
       }}>
-        <h2 style={{ color: '#d32f2f', marginBottom: '20px' }}>{t.accessDenied || 'Access Denied'}</h2>
-        <p style={{ color: '#666', marginBottom: '30px' }}>{t.adminOnly || 'Only admins can access this page'}</p>
+        <h2 style={{ color: '#d32f2f', marginBottom: '20px' }}>{t.accessDenied}</h2>
+        <p style={{ color: '#666', marginBottom: '30px' }}>{t.adminOnly}</p>
         <a href="/staff" style={{
           display: 'inline-block',
           padding: '10px 20px',
@@ -319,7 +294,7 @@ export default function StaffAdmin() {
           borderRadius: '4px',
           fontWeight: '500'
         }}>
-          {t.backToStaff || 'Back to Staff'}
+          {t.backToStaff}
         </a>
       </div>
     );
@@ -336,7 +311,7 @@ export default function StaffAdmin() {
           marginBottom: '30px'
         }}>
           <h1 style={{ fontSize: '2rem', color: '#0B1C3F', margin: 0 }}>
-            {t.staff || 'Staff'} Management
+            {t.staff} Management
           </h1>
           <button
             onClick={() => {
@@ -357,7 +332,7 @@ export default function StaffAdmin() {
             onMouseEnter={e => e.target.style.opacity = '0.9'}
             onMouseLeave={e => e.target.style.opacity = '1'}
           >
-            + {t.addStaff || 'Add Staff Member'}
+            + {t.addStaff}
           </button>
         </div>
 
@@ -383,56 +358,51 @@ export default function StaffAdmin() {
             boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
           }}>
             <h2 style={{ color: '#0B1C3F', marginBottom: '20px', marginTop: 0 }}>
-              {editingId ? (t.editStaff || 'Edit Staff Member') : (t.addStaff || 'Add Staff Member')}
+              {editingId ? t.editStaff : t.addStaff}
             </h2>
 
             <form onSubmit={handleSubmit}>
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 1fr',
-                gap: '15px',
-                marginBottom: '15px'
-              }}>
-                <div>
-                  <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>
-                    {t.name || 'Full Name'} <span style={{ color: 'red' }}>*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="fullName"
-                    value={formData.fullName}
-                    onChange={handleInputChange}
-                    required
-                    style={{
-                      width: '100%',
-                      padding: '10px',
-                      border: '1px solid #ddd',
-                      borderRadius: '4px',
-                      fontSize: '14px',
-                      boxSizing: 'border-box'
-                    }}
-                  />
-                </div>
-                <div>
-                  <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>
-                    {t.position || 'Position'} <span style={{ color: 'red' }}>*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="position"
-                    value={formData.position}
-                    onChange={handleInputChange}
-                    required
-                    style={{
-                      width: '100%',
-                      padding: '10px',
-                      border: '1px solid #ddd',
-                      borderRadius: '4px',
-                      fontSize: '14px',
-                      boxSizing: 'border-box'
-                    }}
-                  />
-                </div>
+              <div style={{ marginBottom: '15px' }}>
+                <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>
+                  {t.fullName} *
+                </label>
+                <input
+                  type="text"
+                  name="fullName"
+                  value={formData.fullName}
+                  onChange={handleInputChange}
+                  required
+                  style={{
+                    width: '100%',
+                    padding: '10px',
+                    border: '1px solid #ddd',
+                    borderRadius: '4px',
+                    fontSize: '14px',
+                    boxSizing: 'border-box'
+                  }}
+                />
+              </div>
+
+              <div style={{ marginBottom: '15px' }}>
+                <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>
+                  {t.role} *
+                </label>
+                <input
+                  type="text"
+                  name="role"
+                  value={formData.role}
+                  onChange={handleInputChange}
+                  required
+                  placeholder="e.g., Manager, Coordinator"
+                  style={{
+                    width: '100%',
+                    padding: '10px',
+                    border: '1px solid #ddd',
+                    borderRadius: '4px',
+                    fontSize: '14px',
+                    boxSizing: 'border-box'
+                  }}
+                />
               </div>
 
               <div style={{
@@ -443,7 +413,7 @@ export default function StaffAdmin() {
               }}>
                 <div>
                   <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>
-                    {t.email || 'Email'}
+                    {t.email}
                   </label>
                   <input
                     type="email"
@@ -462,14 +432,15 @@ export default function StaffAdmin() {
                 </div>
                 <div>
                   <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>
-                    {t.phone || 'Phone'} <span style={{ color: 'red' }}>*</span>
+                    {t.phone} *
                   </label>
                   <input
                     type="tel"
-                    name="phoneNumber"
-                    value={formData.phoneNumber}
+                    name="phone"
+                    value={formData.phone}
                     onChange={handleInputChange}
                     required
+                    placeholder="9876543210"
                     style={{
                       width: '100%',
                       padding: '10px',
@@ -484,13 +455,12 @@ export default function StaffAdmin() {
 
               <div style={{ marginBottom: '15px' }}>
                 <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>
-                  {t.experience || 'Experience (years)'}
+                  Profile Image
                 </label>
                 <input
-                  type="number"
-                  name="experience"
-                  value={formData.experience}
-                  onChange={handleInputChange}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
                   style={{
                     width: '100%',
                     padding: '10px',
@@ -500,50 +470,47 @@ export default function StaffAdmin() {
                     boxSizing: 'border-box'
                   }}
                 />
-              </div>
-
-              <div style={{ marginBottom: '15px' }}>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>
-                  Profile Photo (Optional, max 5MB)
-                </label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageChange}
-                  style={{
-                    width: '100%',
-                    padding: '10px',
-                    border: '1px solid #ddd',
-                    borderRadius: '4px',
-                    boxSizing: 'border-box'
-                  }}
-                />
                 {imagePreview && (
                   <div style={{ marginTop: '10px', textAlign: 'center' }}>
-                    <img 
-                      src={imagePreview} 
-                      alt="Preview" 
-                      style={{ 
-                        maxWidth: '150px', 
-                        maxHeight: '150px', 
-                        borderRadius: '8px',
-                        objectFit: 'cover',
-                        border: '2px solid #ddd' 
-                      }}
+                    <img
+                      src={imagePreview}
+                      alt="Profile Preview"
+                      style={{ maxWidth: '100%', maxHeight: '200px', borderRadius: '4px' }}
                     />
+                    <button
+                      type="button"
+                      onClick={clearImage}
+                      style={{
+                        display: 'block',
+                        margin: '10px auto 0',
+                        padding: '8px 16px',
+                        backgroundColor: '#d32f2f',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        fontWeight: '500',
+                        transition: 'all 0.3s ease'
+                      }}
+                      onMouseEnter={e => e.target.style.opacity = '0.9'}
+                      onMouseLeave={e => e.target.style.opacity = '1'}
+                    >
+                      Remove Image
+                    </button>
                   </div>
                 )}
               </div>
 
               <div style={{ marginBottom: '20px' }}>
                 <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>
-                  {t.description || 'Description'}
+                  {t.responsibilities}
                 </label>
                 <textarea
-                  name="description"
-                  value={formData.description}
+                  name="responsibilities"
+                  value={formData.responsibilities}
                   onChange={handleInputChange}
                   rows="4"
+                  placeholder="Key responsibilities and duties (optional)..."
                   style={{
                     width: '100%',
                     padding: '10px',
@@ -572,7 +539,7 @@ export default function StaffAdmin() {
                   onMouseEnter={e => e.target.style.opacity = '0.9'}
                   onMouseLeave={e => e.target.style.opacity = '1'}
                 >
-                  {t.save || 'Save'}
+                  {t.save}
                 </button>
                 <button
                   type="button"
@@ -590,7 +557,7 @@ export default function StaffAdmin() {
                   onMouseEnter={e => e.target.style.backgroundColor = '#e8e8e8'}
                   onMouseLeave={e => e.target.style.backgroundColor = '#f5f5f5'}
                 >
-                  {t.cancel || 'Cancel'}
+                  {t.cancel}
                 </button>
               </div>
             </form>
@@ -605,7 +572,7 @@ export default function StaffAdmin() {
             backgroundColor: 'white',
             borderRadius: '8px'
           }}>
-            <p style={{ fontSize: '16px', color: '#999' }}>{t.noStaff || 'No staff members'}</p>
+            <p style={{ fontSize: '16px', color: '#999' }}>{t.noStaff}</p>
           </div>
         ) : (
           <div style={{
@@ -624,57 +591,44 @@ export default function StaffAdmin() {
                   transition: 'transform 0.3s ease'
                 }}
               >
-                {/* Profile Image */}
                 <div style={{
-                  height: '200px',
+                  padding: '20px',
                   background: 'linear-gradient(135deg, #0B1C3F 0%, #1a3a6b 100%)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  overflow: 'hidden'
+                  color: 'white'
                 }}>
-                  {member.profileImageUrl ? (
-                    <img 
-                      src={member.profileImageUrl} 
-                      alt={member.fullName || member.name}
-                      style={{ 
-                        width: '100%', 
-                        height: '100%', 
-                        objectFit: 'cover' 
-                      }}
-                      onError={(e) => { 
-                        e.currentTarget.style.display = 'none';
-                        e.currentTarget.parentElement.innerHTML = '<span style="font-size: 4rem; color: white">👤</span>';
-                      }}
-                    />
-                  ) : (
-                    <span style={{ fontSize: '4rem', color: 'white' }}>👤</span>
-                  )}
+                  <h3 style={{ margin: '0 0 5px 0' }}>{member.fullName}</h3>
+                  <p style={{ margin: 0, fontSize: '12px', opacity: 0.9 }}>
+                    {member.role}
+                  </p>
                 </div>
 
                 <div style={{ padding: '20px' }}>
-                  <h3 style={{ margin: '0 0 5px 0', color: '#0B1C3F' }}>
-                    {member.fullName || member.name}
-                  </h3>
-                  <p style={{ margin: '0 0 10px 0', fontSize: '12px', color: '#E6B325', fontWeight: 'bold' }}>
-                    {member.position}
+                  {member.profileImageUrl && (
+                    <div style={{ textAlign: 'center', marginBottom: '15px' }}>
+                      <img
+                        src={member.profileImageUrl}
+                        alt="Profile"
+                        style={{ maxWidth: '100%', maxHeight: '200px', borderRadius: '4px' }}
+                      />
+                    </div>
+                  )}
+                  <p style={{ margin: '0 0 10px 0', color: '#666', fontSize: '14px' }}>
+                    🏢 {member.department}
                   </p>
                   <p style={{ margin: '0 0 10px 0', color: '#666', fontSize: '14px' }}>
                     📧 {member.email}
                   </p>
                   <p style={{ margin: '0 0 10px 0', color: '#666', fontSize: '14px' }}>
-                    📞 {member.phoneNumber || member.phone}
+                    📞 {member.phone || member.phoneNumber}
                   </p>
-                  {member.experience && (
+                  {member.joiningDate && (
                     <p style={{ margin: '0 0 15px 0', color: '#666', fontSize: '14px' }}>
-                      ⭐ {member.experience} years experience
+                      ⭐ {calculateYearsOfService(member.joiningDate)} {t.yearsOfService}
                     </p>
                   )}
-                  {member.description && (
-                    <p style={{ margin: '0 0 20px 0', color: '#666', fontSize: '13px', lineHeight: '1.4' }}>
-                      {member.description.substring(0, 100)}{member.description.length > 100 ? '...' : ''}
-                    </p>
-                  )}
+                  <p style={{ margin: '0 0 20px 0', color: '#666', fontSize: '13px', lineHeight: '1.4' }}>
+                    {member.responsibilities?.substring(0, 100)}{member.responsibilities?.length > 100 ? '...' : ''}
+                  </p>
 
                   <div style={{ display: 'flex', gap: '10px' }}>
                     <button
@@ -694,7 +648,7 @@ export default function StaffAdmin() {
                       onMouseEnter={e => e.target.style.opacity = '0.9'}
                       onMouseLeave={e => e.target.style.opacity = '1'}
                     >
-                      {t.edit || 'Edit'}
+                      {t.edit}
                     </button>
                     <button
                       onClick={() => setShowDeleteConfirm(member.id)}
@@ -713,7 +667,7 @@ export default function StaffAdmin() {
                       onMouseEnter={e => e.target.style.opacity = '0.9'}
                       onMouseLeave={e => e.target.style.opacity = '1'}
                     >
-                      {t.delete || 'Delete'}
+                      {t.delete}
                     </button>
                   </div>
                 </div>
@@ -745,10 +699,10 @@ export default function StaffAdmin() {
               textAlign: 'center'
             }}>
               <h3 style={{ color: '#0B1C3F', marginBottom: '15px', marginTop: 0 }}>
-                {t.deleteStaff || 'Delete Staff Member'}
+                {t.deleteStaff}
               </h3>
               <p style={{ color: '#666', marginBottom: '25px' }}>
-                {t.confirmDelete || 'Are you sure you want to delete this staff member?'}
+                {t.confirmDelete}
               </p>
               <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
                 <button
@@ -766,7 +720,7 @@ export default function StaffAdmin() {
                   onMouseEnter={e => e.target.style.opacity = '0.9'}
                   onMouseLeave={e => e.target.style.opacity = '1'}
                 >
-                  {t.delete || 'Delete'}
+                  {t.delete}
                 </button>
                 <button
                   onClick={() => setShowDeleteConfirm(null)}
@@ -783,7 +737,7 @@ export default function StaffAdmin() {
                   onMouseEnter={e => e.target.style.backgroundColor = '#e8e8e8'}
                   onMouseLeave={e => e.target.style.backgroundColor = '#f5f5f5'}
                 >
-                  {t.cancel || 'Cancel'}
+                  {t.cancel}
                 </button>
               </div>
             </div>

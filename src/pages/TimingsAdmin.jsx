@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import { timingsAPI } from '../services/templeAPI';
+import IndiaTime from '../components/IndiaTime';
 
 const translations = {
   en: {
@@ -57,7 +58,7 @@ const translations = {
   }
 };
 
-const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 // Helper to generate unique IDs
 const generateId = () => Date.now() + Math.random().toString(36).substr(2, 9);
@@ -253,14 +254,30 @@ export default function TimingsAdmin() {
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
         {/* Header */}
         <div style={{ marginBottom: '30px' }}>
-          <h1 style={{ fontSize: '2rem', color: '#0B1C3F', margin: '0 0 10px 0' }}>
-            ⏰ {t.timings}
-          </h1>
-          {hasChanges && (
-            <p style={{ color: '#E6B325', margin: 0, fontWeight: '500' }}>
-              ⚠️ {t.unsavedChanges}
-            </p>
-          )}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '15px', marginBottom: '15px' }}>
+            <div>
+              <h1 style={{ fontSize: '2rem', color: '#0B1C3F', margin: '0 0 10px 0' }}>
+                ⏰ {t.timings}
+              </h1>
+              {hasChanges && (
+                <p style={{ color: '#E6B325', margin: 0, fontWeight: '500' }}>
+                  ⚠️ {t.unsavedChanges}
+                </p>
+              )}
+            </div>
+            {/* Current Temple Time */}
+            <div style={{
+              backgroundColor: '#0B1C3F',
+              color: 'white',
+              padding: '15px 25px',
+              borderRadius: '8px',
+              textAlign: 'center',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
+            }}>
+              <div style={{ fontSize: '12px', opacity: 0.8, marginBottom: '5px' }}>Current Temple Time</div>
+              <IndiaTime style={{ fontSize: '1.5rem', fontWeight: 'bold', fontFamily: 'monospace' }} />
+            </div>
+          </div>
         </div>
 
         {error && (

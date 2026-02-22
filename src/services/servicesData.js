@@ -50,6 +50,14 @@ const DEFAULT_SERVICES = [
     description: 'Guided tours explaining the temple history and architecture.',
     details: ['Heritage tour', 'Historical insights', 'Photography allowed'],
     icon: '🏛️'
+  },
+  {
+    id: 7,
+    name: 'Photo Gallery',
+    price: 'Free',
+    description: 'Browse our collection of temple photos, festivals, and special events.',
+    details: ['Temple architecture photos', 'Festival celebrations', 'Special events coverage', 'Deity images', 'Community gatherings'],
+    icon: '📸'
   }
 ];
 

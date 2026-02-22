@@ -8,6 +8,10 @@ export function AuthProvider({ children }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  // Determine if auth is required based on environment
+  const environment = process.env.REACT_APP_ENV || 'no-auth';
+  const requireAuth = environment !== 'no-auth'; // Only no-auth disables authentication
+
   // Restore auth state from localStorage on mount
   useEffect(() => {
     const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
@@ -67,13 +71,15 @@ export function AuthProvider({ children }) {
     loading,
     login,
     logout,
-    // Keep these for backward compatibility
-    requireAuth: false,
-    useJWT: false,
-    authType: 'local',
-    environment: 'local',
-    backendUrl: 'localStorage',
-    description: 'Local Storage Only - No Backend Required'
+    // Dynamic auth configuration based on environment
+    requireAuth,
+    useJWT: requireAuth,
+    authType: requireAuth ? 'jwt' : 'local',
+    environment,
+    backendUrl: requireAuth ? process.env.REACT_APP_API_URL : 'localStorage',
+    description: requireAuth 
+      ? 'Backend Authentication Required' 
+      : 'Local Storage Only - No Backend Required'
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

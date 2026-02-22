@@ -409,27 +409,6 @@ export default function DailyPrayers() {
                             </ul>
                           </div>
                         )}
-
-                        {/* Action Button */}
-                        <button
-                          style={{
-                            padding: '14px 30px',
-                            backgroundColor: isActive ? '#4caf50' : '#0B1C3F',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '8px',
-                            cursor: 'pointer',
-                            fontSize: '15px',
-                            fontWeight: '600',
-                            transition: 'all 0.3s ease',
-                            width: '100%',
-                            maxWidth: '300px'
-                          }}
-                          onMouseEnter={e => e.target.style.opacity = '0.9'}
-                          onMouseLeave={e => e.target.style.opacity = '1'}
-                        >
-                          {isActive ? '🔴 Join Now - Live' : '📅 Set Reminder'}
-                        </button>
                       </div>
                     </div>
                   </div>

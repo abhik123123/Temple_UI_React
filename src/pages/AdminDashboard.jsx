@@ -476,7 +476,6 @@ export default function AdminDashboard() {
           { id: 'events', label: '📅 Events' },
           { id: 'services', label: '🙏 Services' },
           { id: 'staff', label: '👥 Staff' },
-          { id: 'timings', label: '⏰ Timings' },
           { id: 'donors', label: '💝 Donors' },
           { id: 'poojabooks', label: '📚 Pooja Books' }
         ].map(tab => (
@@ -488,6 +487,24 @@ export default function AdminDashboard() {
             {tab.label}
           </button>
         ))}
+        {/* Link to dedicated Timings Admin page */}
+        <a
+          href="/timings/admin"
+          style={{
+            padding: '10px 20px',
+            backgroundColor: '#4CAF50',
+            color: 'white',
+            border: 'none',
+            borderRadius: '5px',
+            cursor: 'pointer',
+            fontWeight: 'normal',
+            textDecoration: 'none',
+            display: 'inline-block',
+            transition: 'all 0.3s ease'
+          }}
+        >
+          ⏰ Timings →
+        </a>
       </div>
 
       {/* ====== DASHBOARD TAB ====== */}
@@ -1057,63 +1074,6 @@ export default function AdminDashboard() {
                 ))}
               </div>
             )}
-          </div>
-        </div>
-      )}
-
-      {/* ====== TIMINGS TAB ====== */}
-      {activeTab === 'timings' && (
-        <div style={{ marginTop: '2rem' }}>
-          <h2 style={{ color: '#0B1C3F', marginBottom: '2rem' }}>⏰ Temple Timings</h2>
-          <div style={{ backgroundColor: 'white', padding: '2rem', borderRadius: '10px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
-            <h3 style={{ color: '#0B1C3F', marginBottom: '1.5rem' }}>Weekly Schedule</h3>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
-              {Object.entries(timings).map(([day, time]) => (
-                <div key={day} style={{ padding: '1rem', backgroundColor: '#f9f9f9', borderRadius: '5px' }}>
-                  <h4 style={{ color: '#0B1C3F', marginBottom: '1rem', textTransform: 'capitalize' }}>
-                    {day.charAt(0).toUpperCase() + day.slice(1)}
-                  </h4>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '0.5rem' }}>Opening Time</label>
-                      <input
-                        type="time"
-                        value={time.open}
-                        onChange={(e) => setTimings({ ...timings, [day]: { ...time, open: e.target.value } })}
-                        style={{ width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: '3px', boxSizing: 'border-box' }}
-                      />
-                    </div>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '0.5rem' }}>Closing Time</label>
-                      <input
-                        type="time"
-                        value={time.close}
-                        onChange={(e) => setTimings({ ...timings, [day]: { ...time, close: e.target.value } })}
-                        style={{ width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: '3px', boxSizing: 'border-box' }}
-                      />
-                    </div>
-                  </div>
-                  <p style={{ color: '#666', fontSize: '0.9rem' }}>
-                    {formatTime(time.open)} - {formatTime(time.close)}
-                  </p>
-                </div>
-              ))}
-            </div>
-            <button
-              onClick={handleSaveTimings}
-              style={{
-                marginTop: '2rem',
-                padding: '10px 30px',
-                backgroundColor: '#E6B325',
-                color: '#0B1C3F',
-                border: 'none',
-                borderRadius: '5px',
-                cursor: 'pointer',
-                fontWeight: 'bold'
-              }}
-            >
-              Save Timings
-            </button>
           </div>
         </div>
       )}

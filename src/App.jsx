@@ -8,7 +8,6 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Login from './pages/Login';
 import UserHome from './pages/UserHome';
 import AdminHome from './pages/AdminHome';
-import AdminDashboard from './pages/AdminDashboard';
 import EventsUser from './pages/EventsUser';
 import EventsAdmin from './pages/EventsAdmin';
 import Services from './pages/Services';
@@ -18,12 +17,12 @@ import ServicesAdmin from './pages/ServicesAdmin';
 // import BajanasAdmin from './pages/BajanasAdmin';
 // import PoojaBooks from './pages/PoojaBooks';
 // import PoojaAdmin from './pages/PoojaAdmin';
-import Staff from './pages/Staff';
-import StaffAdmin from './pages/StaffAdmin';
 import Timings from './pages/Timings';
 import TimingsAdmin from './pages/TimingsAdmin';
 import Donors from './pages/Donors';
 import BoardMembers from './pages/BoardMembers';
+import Staff from './pages/Staff';
+import StaffAdmin from './pages/StaffAdmin';
 import SubscriptionAdmin from './components/SubscriptionAdmin';
 import DonorsAdmin from './pages/DonorsAdmin';
 import DailyPrayers from './pages/DailyPrayers';
@@ -45,10 +44,10 @@ function AppRoutes() {
         <Route path="/services" element={<Services />} />
         {/* <Route path="/bajanas" element={<Bajanas />} /> */}
         {/* <Route path="/pooja-books" element={<PoojaBooks />} /> */}
-        <Route path="/staff" element={<Staff />} />
         <Route path="/timings" element={<Timings />} />
         <Route path="/donors" element={<Donors />} />
         <Route path="/board-members" element={<BoardMembers />} />
+        <Route path="/staff" element={<Staff />} />
         <Route path="/daily-prayers" element={<DailyPrayers />} />
 
         {/* ADMIN ROUTES - Authentication and admin role required */}
@@ -82,11 +81,6 @@ function AppRoutes() {
             <PoojaAdmin />
           </ProtectedRoute>
         } /> */}
-        <Route path="/staff/admin" element={
-          <ProtectedRoute requireAdmin>
-            <StaffAdmin />
-          </ProtectedRoute>
-        } />
         <Route path="/timings/admin" element={
           <ProtectedRoute requireAdmin>
             <TimingsAdmin />
@@ -94,6 +88,11 @@ function AppRoutes() {
         } />
         {/* Board Members - Integrated admin/user view, redirect admin route to main page */}
         <Route path="/board-members/admin" element={<Navigate to="/board-members" replace />} />
+        <Route path="/staff/admin" element={
+          <ProtectedRoute requireAdmin>
+            <StaffAdmin />
+          </ProtectedRoute>
+        } />
         <Route path="/donors/admin" element={
           <ProtectedRoute requireAdmin>
             <DonorsAdmin />
@@ -107,11 +106,6 @@ function AppRoutes() {
         <Route path="/daily-prayers/admin" element={
           <ProtectedRoute requireAdmin>
             <DailyPrayersAdmin />
-          </ProtectedRoute>
-        } />
-        <Route path="/admin/dashboard" element={
-          <ProtectedRoute requireAdmin>
-            <AdminDashboard />
           </ProtectedRoute>
         } />
 
