@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { useLanguage } from '../context/LanguageContext';
 import { getAnalyticsData, clearAnalyticsData, exportAnalyticsData } from '../services/analyticsService';
 
 export default function AnalyticsAdmin() {
-  const { t } = useLanguage();
   const [analyticsData, setAnalyticsData] = useState({
     totalViews: 0,
     todayViews: 0,
@@ -16,6 +14,7 @@ export default function AnalyticsAdmin() {
   const [loading, setLoading] = useState(true);
   const [dateRange, setDateRange] = useState('week'); // week, month, year
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     fetchAnalyticsData();
     
@@ -25,6 +24,7 @@ export default function AnalyticsAdmin() {
     }, 30000);
     
     return () => clearInterval(interval);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dateRange]);
 
   const fetchAnalyticsData = async () => {

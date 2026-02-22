@@ -677,7 +677,7 @@ export const imagesAPI = {
 export { STORAGE_KEYS };
 
 // Default export
-export default {
+const templeAPI = {
   eventsAPI,
   servicesAPI,
   staffAPI,
@@ -686,3 +686,5 @@ export default {
   authAPI,
   imagesAPI
 };
+
+export default templeAPI;

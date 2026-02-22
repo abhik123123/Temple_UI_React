@@ -1,9 +1,7 @@
 import { useState, useEffect } from 'react';
-import { useLanguage } from '../context/LanguageContext';
 import { timingsAPI } from '../services/templeAPI';
 
 export default function Timings() {
-  const { t } = useLanguage();
   const [timings, setTimings] = useState([]);
   const [loading, setLoading] = useState(true);
 

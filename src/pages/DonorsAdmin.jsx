@@ -1,10 +1,8 @@
 import { useState, useEffect } from 'react';
-import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import { donorsAPI } from '../services/templeAPI';
 
 export default function DonorsAdmin() {
-  const { language } = useLanguage();
   const { user, isAuthenticated } = useAuth();
 
   const [donors, setDonors] = useState([]);

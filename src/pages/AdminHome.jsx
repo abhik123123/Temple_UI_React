@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { useLanguage } from '../context/LanguageContext';
 
 export default function AdminHome() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
-  const { t } = useLanguage();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   const shivaImages = [
