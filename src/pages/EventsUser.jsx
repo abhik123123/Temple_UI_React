@@ -328,6 +328,24 @@ export default function EventsUser() {
                     e.currentTarget.style.boxShadow = '0 4px 6px rgba(0,0,0,0.07)';
                   }}
                 >
+                  {/* Event Image */}
+                  <div style={{
+                    width: '100%',
+                    height: '220px',
+                    backgroundColor: '#e8eef5',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    overflow: 'hidden',
+                    background: event.imageUrl 
+                      ? `url(${event.imageUrl}) center/cover no-repeat`
+                      : 'linear-gradient(135deg, #0B1C3F 0%, #1a3a6b 100%)',
+                    fontSize: '60px',
+                    color: 'white'
+                  }}>
+                    {!event.imageUrl && '🎉'}
+                  </div>
+
                   {/* Event Header with Gradient */}
                   <div style={{
                     padding: '25px',
@@ -581,6 +599,28 @@ export default function EventsUser() {
 
                 {/* Modal Content */}
                 <div style={{ padding: '30px' }}>
+                  {/* Event Image in Modal */}
+                  {selectedEvent.imageUrl && (
+                    <div style={{
+                      marginBottom: '25px',
+                      width: '100%',
+                      height: '300px',
+                      borderRadius: '12px',
+                      overflow: 'hidden',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+                    }}>
+                      <img 
+                        src={selectedEvent.imageUrl}
+                        alt={selectedEvent.title || selectedEvent.eventName}
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'cover'
+                        }}
+                      />
+                    </div>
+                  )}
+
                   <div style={{ marginBottom: '25px' }}>
                     <h4 style={{ color: '#0B1C3F', marginBottom: '12px', fontSize: '1.1rem' }}>
                       📖 {t.description}
