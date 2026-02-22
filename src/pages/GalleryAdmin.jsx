@@ -25,9 +25,16 @@ export default function GalleryAdmin() {
   const fetchGalleryData = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/gallery');
-      const data = await response.json();
-      setGalleryData(data);
+      // Load from localStorage
+      const savedImages = JSON.parse(localStorage.getItem('temple_gallery_images') || '[]');
+      const savedVideos = JSON.parse(localStorage.getItem('temple_gallery_videos') || '[]');
+      const savedYoutubeLinks = JSON.parse(localStorage.getItem('temple_gallery_youtube') || '[]');
+      
+      setGalleryData({
+        images: savedImages,
+        videos: savedVideos,
+        youtubeLinks: savedYoutubeLinks
+      });
     } catch (error) {
       console.error('Error fetching gallery data:', error);
       // Use mock data for local development
@@ -66,7 +73,14 @@ export default function GalleryAdmin() {
           ...galleryData,
           youtubeLinks: updatedYoutubeLinks
         });
-        localStorage.setItem('temple_gallery_youtube', JSON.stringify(updatedYoutubeLinks));
+        try {
+          localStorage.setItem('temple_gallery_youtube', JSON.stringify(updatedYoutubeLinks));
+          console.log('✓ YouTube link saved to localStorage');
+        } catch (storageError) {
+          console.error('LocalStorage error:', storageError);
+          alert('Storage quota exceeded or localStorage unavailable');
+          return;
+        }
         
         alert('YouTube link added successfully!');
         resetForm();
@@ -116,7 +130,14 @@ export default function GalleryAdmin() {
             images: updatedImages
           });
           // Save to localStorage
-          localStorage.setItem('temple_gallery_images', JSON.stringify(updatedImages));
+          try {
+            localStorage.setItem('temple_gallery_images', JSON.stringify(updatedImages));
+            console.log('✓ Images saved to localStorage:', updatedImages.length, 'images');
+          } catch (storageError) {
+            console.error('LocalStorage error:', storageError);
+            alert('Storage quota exceeded or localStorage unavailable');
+            return;
+          }
         } else if (activeTab === 'videos') {
           const updatedVideos = [...galleryData.videos, ...newItems];
           setGalleryData({
@@ -124,7 +145,14 @@ export default function GalleryAdmin() {
             videos: updatedVideos
           });
           // Save to localStorage
-          localStorage.setItem('temple_gallery_videos', JSON.stringify(updatedVideos));
+          try {
+            localStorage.setItem('temple_gallery_videos', JSON.stringify(updatedVideos));
+            console.log('✓ Videos saved to localStorage:', updatedVideos.length, 'videos');
+          } catch (storageError) {
+            console.error('LocalStorage error:', storageError);
+            alert('Storage quota exceeded or localStorage unavailable');
+            return;
+          }
         }
 
         alert(`${formData.files.length} ${activeTab} added successfully!`);

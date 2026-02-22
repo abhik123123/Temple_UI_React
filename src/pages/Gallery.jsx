@@ -28,6 +28,11 @@ export default function Gallery() {
       const savedVideos = JSON.parse(localStorage.getItem('temple_gallery_videos') || '[]');
       const savedYoutubeLinks = JSON.parse(localStorage.getItem('temple_gallery_youtube') || '[]');
       
+      console.log('Gallery data loaded from localStorage:');
+      console.log('✓ Images:', savedImages.length);
+      console.log('✓ Videos:', savedVideos.length);
+      console.log('✓ YouTube Links:', savedYoutubeLinks.length);
+      
       setGalleryData({
         images: savedImages,
         videos: savedVideos,
