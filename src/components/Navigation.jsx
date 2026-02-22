@@ -63,7 +63,7 @@ export default function Navigation() {
           <li><Link to={isAdminPage ? "/staff/admin" : "/staff"}>Staff</Link></li>
           <li><Link to={isAdminPage ? "/timings/admin" : "/timings"}>{t('nav_timings')}</Link></li>
           <li><Link to={isAdminPage ? "/board-members/admin" : "/board-members"}>Board</Link></li>
-          {user?.role === 'admin' && !isAdminPage && <li><Link to="/subscriptions/admin">📧 Newsletter</Link></li>}
+          {/* Newsletter link removed */}
         </ul>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
           {/* Time Display */}
