@@ -40,8 +40,8 @@ const config = {
   },
   production: {
     env: 'production',
-    apiUrl: 'https://temple.com:3000',
-    backendUrl: 'https://api.temple.com:8080',
+    apiUrl: process.env.REACT_APP_FRONTEND_URL || 'https://main.d1fxfet4vf3480.amplifyapp.com',
+    backendUrl: process.env.REACT_APP_API_URL || 'https://api-backend.elasticbeanstalk.com',
     requireAuth: true,
     authType: 'jwt', // JWT Token Required (Strict)
     useJWT: true,

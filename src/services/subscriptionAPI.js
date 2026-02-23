@@ -5,7 +5,9 @@
 
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:8080/api/newsletter';
+const API_BASE_URL = process.env.REACT_APP_API_URL 
+  ? `${process.env.REACT_APP_API_URL}/newsletter`
+  : 'http://localhost:8080/api/newsletter';
 
 export const subscriptionAPI = {
   /**
