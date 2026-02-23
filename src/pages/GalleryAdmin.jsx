@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 
 export default function GalleryAdmin() {
-  const { t } = useLanguage();
+  // const { t } = useLanguage(); // Not currently used
   const [activeTab, setActiveTab] = useState('images');
   const [galleryData, setGalleryData] = useState({
     images: [],
@@ -207,7 +207,7 @@ export default function GalleryAdmin() {
   };
 
   const getYouTubeEmbedUrl = (url) => {
-    const videoId = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
+    const videoId = url.match(/(?:youtube\.com\/(?:[^/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?/\s]{11})/);
     return videoId ? `https://www.youtube.com/embed/${videoId[1]}` : null;
   };
 

@@ -3,7 +3,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { timingsAPI } from '../services/templeAPI';
 
 export default function Timings() {
-  const { t } = useLanguage();
+  // const { t } = useLanguage(); // Not currently used
   const [timings, setTimings] = useState([]);
   const [loading, setLoading] = useState(true);
 

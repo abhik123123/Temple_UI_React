@@ -5,7 +5,7 @@
 
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:8080/api/subscriptions';
+const API_BASE_URL = 'http://localhost:8080/api/newsletter';
 
 export const subscriptionAPI = {
   /**

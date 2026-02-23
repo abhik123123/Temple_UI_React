@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { donorsAPI } from '../services/templeAPI';
 
 export default function DonorsAdmin() {
-  const { language } = useLanguage();
+  // const { language } = useLanguage(); // Not currently used
   const { user, isAuthenticated } = useAuth();
 
   const [donors, setDonors] = useState([]);

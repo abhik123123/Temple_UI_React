@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { getAllDailyPoojas, getTodaysPoojas, getPoojasByDay, DAYS_OF_WEEK } from '../services/dailyPoojasData';
 import { usePageTracking } from '../hooks/usePageTracking';
@@ -7,7 +7,7 @@ export default function DailyPrayers() {
   // Track page view
   usePageTracking('Daily Prayers');
   
-  const { t } = useLanguage();
+  // const { t } = useLanguage(); // Not currently used
   const [poojas, setPoojas] = useState([]);
   const [selectedDay, setSelectedDay] = useState('Today');
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -21,11 +21,7 @@ export default function DailyPrayers() {
     return () => clearInterval(timer);
   }, []);
 
-  useEffect(() => {
-    loadPoojas();
-  }, [selectedDay]);
-
-  const loadPoojas = () => {
+  const loadPoojas = useCallback(() => {
     if (selectedDay === 'Today') {
       setPoojas(getTodaysPoojas());
     } else if (selectedDay === 'All') {
@@ -33,7 +29,11 @@ export default function DailyPrayers() {
     } else {
       setPoojas(getPoojasByDay(selectedDay));
     }
-  };
+  }, [selectedDay]);
+
+  useEffect(() => {
+    loadPoojas();
+  }, [loadPoojas]);
 
   // Sort poojas by time
   const sortedPoojas = [...poojas].sort((a, b) => {

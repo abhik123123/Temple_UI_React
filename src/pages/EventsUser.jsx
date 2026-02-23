@@ -122,7 +122,7 @@ const MOCK_EVENTS = [
 
 export default function EventsUser() {
   const { language } = useLanguage();
-  const { user } = useAuth();
+  // const { user } = useAuth(); // Not currently used
   const t = translations[language] || translations.en;
 
   const [events, setEvents] = useState([]);
