@@ -65,31 +65,34 @@ const uploadToLocal = async (file) => {
  * @returns {Promise<string>} - S3 file URL
  */
 const uploadToS3 = async (file) => {
-  // TODO: Implement S3 upload when credentials are provided
-  // For now, throw error if S3 is configured but not implemented
-  if (STORAGE_TYPE === 's3') {
-    throw new Error('S3 upload not yet configured. Please set STORAGE_TYPE=local in .env');
+  try {
+    const AWS = require('aws-sdk');
+    
+    const s3 = new AWS.S3({
+      accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+      region: process.env.AWS_S3_REGION || 'us-east-2'
+    });
+
+    const key = `uploads/${Date.now()}-${file.originalname}`;
+    
+    const params = {
+      Bucket: process.env.AWS_S3_BUCKET,
+      Key: key,
+      Body: file.buffer,
+      ContentType: file.mimetype,
+      ACL: 'public-read'
+    };
+
+    console.log(`📤 Uploading to S3: ${key}`);
+    const result = await s3.upload(params).promise();
+    console.log(`✓ File uploaded to S3: ${result.Location}`);
+    
+    return result.Location;
+  } catch (error) {
+    console.error('❌ S3 upload error:', error.message);
+    throw new Error(`S3 upload failed: ${error.message}`);
   }
-  
-  /* 
-  const AWS = require('aws-sdk');
-  const s3 = new AWS.S3({
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-    region: process.env.AWS_REGION
-  });
-
-  const params = {
-    Bucket: process.env.S3_BUCKET_NAME,
-    Key: `${Date.now()}-${file.originalname}`,
-    Body: file.buffer,
-    ContentType: file.mimetype,
-    ACL: 'public-read'
-  };
-
-  const result = await s3.upload(params).promise();
-  return result.Location;
-  */
 };
 
 /**
